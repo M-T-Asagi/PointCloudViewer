@@ -52,6 +52,7 @@ public class PointCloudPTSViewer : MonoBehaviour
     String text;
     int pointNum = -1;
     int processedPointNum = 0;
+    bool pointScaned = false;
     bool meshCreated = false;
     bool destroyed = false;
 
@@ -71,13 +72,13 @@ public class PointCloudPTSViewer : MonoBehaviour
         meshRenderer.material = mat;
 
         text = pointsData.text;
-        Task setPointsTask = Task.Run(SetPoints);
+        Task setPointsTask = Task.Run(() => SetPointsAsync());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (pointNum >= 0 && pointNum == processedPointNum && !meshCreated)
+        if (pointScaned && !meshCreated)
         {
             CreateMesh();
             canvas.SetActive(false);
@@ -86,7 +87,7 @@ public class PointCloudPTSViewer : MonoBehaviour
 
         if (!meshCreated && pointNum >= 0)
         {
-            pbManager.UpdateState(processedPointNum / pointNum);
+            pbManager.UpdateState((float)processedPointNum / (float)pointNum);
             textArea.text = processedPointNum + " /\n" + pointNum;
         }
 
@@ -97,7 +98,6 @@ public class PointCloudPTSViewer : MonoBehaviour
         StringReader reader = new StringReader(text);
         string fl = reader.ReadLine();
         pointNum = Int32.Parse(fl);
-
         points = new CloudPoint[pointNum];
         for (int i = 0; i < pointNum; i++)
         {
@@ -121,6 +121,43 @@ public class PointCloudPTSViewer : MonoBehaviour
 
             if (destroyed) break;
         }
+    }
+
+    void SetPointsAsync()
+    {
+        StringReader reader = new StringReader(text);
+        string fl = reader.ReadLine();
+        pointNum = Int32.Parse(fl);
+        points = new CloudPoint[pointNum];
+
+        Parallel.For(0, pointNum, async (i, loopState) =>
+         {
+             string _read = await reader.ReadLineAsync();
+             string[] data = _read.Split(' ');
+             points[i] = new CloudPoint(
+                 new Vector3(
+                     float.Parse(data[0]) * sizeScale,
+                     float.Parse(data[1]) * sizeScale,
+                     float.Parse(data[2]) * sizeScale
+                 ),
+                 Int32.Parse(data[3]),
+                 new Color(
+                     float.Parse(data[4]) / 255f,
+                     float.Parse(data[5]) / 255f,
+                     float.Parse(data[6]) / 255f
+                 ));
+
+             processedPointNum++;
+             Debug.Log(points[i].ToString());
+
+             if (destroyed)
+             {
+                 loopState.Stop();
+                 return;
+             }
+         });
+
+        pointScaned = true;
     }
 
     void CreateMesh()
