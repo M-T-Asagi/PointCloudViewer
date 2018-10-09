@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 public class PointCloudPTSViewer : MonoBehaviour
 {
-    const int MAX_LIST_LENGTH = 300000;
-
     public struct CloudPoint
     {
         public Vector3 point;
@@ -35,6 +33,8 @@ public class PointCloudPTSViewer : MonoBehaviour
 
     [SerializeField]
     float sizeScale = 0.0001f;
+    [SerializeField]
+    int maxPointsNumInAnObject = 300000;
     [SerializeField]
     string filePath;
     [SerializeField]
@@ -98,10 +98,10 @@ public class PointCloudPTSViewer : MonoBehaviour
     {
         Debug.Log("Scan start!");
 
-        int newPointsArrayCount = Mathf.Min(MAX_LIST_LENGTH, pointNum - MAX_LIST_LENGTH * (processedCount + 1));
+        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, pointNum - maxPointsNumInAnObject * (processedCount + 1));
         Debug.Log("new points array count : " + newPointsArrayCount);
 
-        continuos = (newPointsArrayCount >= MAX_LIST_LENGTH);
+        continuos = (newPointsArrayCount >= maxPointsNumInAnObject);
 
         CloudPoint[] points = new CloudPoint[newPointsArrayCount];
 
