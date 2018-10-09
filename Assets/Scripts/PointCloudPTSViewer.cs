@@ -106,11 +106,13 @@ public class PointCloudPTSViewer : MonoBehaviour
         CloudPoint[] points = new CloudPoint[newPointsArrayCount];
 
         int currentCount = 0;
-        Parallel.For(0, newPointsArrayCount, options, async (i, loopState) =>
+        Parallel.For(0, newPointsArrayCount, options, (i, loopState) =>
         {
             try
             {
-                string _read = await reader.ReadLineAsync();
+                string _read;
+                lock (Thread.CurrentContext)
+                    _read = reader.ReadLine();
                 if (_read == null || _read == "")
                 {
                     Debug.LogError("reading failed!");
