@@ -7,12 +7,13 @@ Taskを使っているので、非対応のUnityバージョンでは利用で�
 
 動作の保証等は致しませんが、私的利用の範囲内でご自由にご利用ください。
 
-#HOW TO USE
+# HOW TO USE
 
 SampleSceneにMeshBakerというオブジェクトがあります。
 それにアタッチされている「Point cloud PTS Viewer」というスクリプトの
 
 + `Size scale` でサイズ比が
++ `max points in an object` で1オブジェクトごとの最大頂点数が
 + `File Path` で使用するPTSファイルが
 
 それぞれ指定できます。
