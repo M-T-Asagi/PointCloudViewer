@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEditor;
 
 public class MeshBaker : MonoBehaviour
 {
@@ -16,10 +17,12 @@ public class MeshBaker : MonoBehaviour
 
     bool process;
 
-    // Use this for initialization
-    void Start()
+    private void Start()
     {
-
+        GameObject newObj = new GameObject();
+        newObj.transform.SetParent(transform);
+        newObj.transform.localPosition = Vector3.zero;
+        newObj.transform.localRotation = Quaternion.identity;
     }
 
     // Update is called once per frame
@@ -67,7 +70,7 @@ public class MeshBaker : MonoBehaviour
         mesh.colors = colorsBuff;
         mesh.SetIndices(indecesBuff, MeshTopology.Points, 0);
 
-        GameObject child = Instantiate(prefab, transform);
+        GameObject child = Instantiate(prefab, transform.GetChild(0));
         child.GetComponent<MeshFilter>().sharedMesh = mesh;
 
         Cleanup();

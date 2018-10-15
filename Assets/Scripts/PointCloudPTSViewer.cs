@@ -31,6 +31,10 @@ public class PointCloudPTSViewer : MonoBehaviour
         }
     }
 
+    public class ProcessUpArgs : EventArgs
+    {
+    }
+
     [SerializeField]
     float sizeScale = 0.0001f;
     [SerializeField]
@@ -54,6 +58,8 @@ public class PointCloudPTSViewer : MonoBehaviour
     bool destroy = false;
 
     ParallelOptions options;
+
+    public EventHandler<ProcessUpArgs> processUp;
 
     // Use this for initialization
     void Start()
@@ -173,6 +179,7 @@ public class PointCloudPTSViewer : MonoBehaviour
         }
         else
         {
+            processUp?.Invoke(this, new ProcessUpArgs());
             Cleanup();
             canvas.SetActive(false);
         }
