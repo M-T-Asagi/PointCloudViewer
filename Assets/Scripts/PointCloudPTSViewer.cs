@@ -132,12 +132,6 @@ public class PointCloudPTSViewer : MonoBehaviour
                             float.Parse(data[5]) / 255f,
                             float.Parse(data[6]) / 255f
                         ));
-
-                    if (i == 0)
-                    {
-                        Debug.Log("akakakakakakakaka");
-                        Debug.Log(points[i]);
-                    }
                 }
             }
             catch (Exception e)
