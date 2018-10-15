@@ -9,31 +9,31 @@ Prefab:
     m_Modifications: []
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1538947716265164}
+  m_RootGameObject: {fileID: 1958731458697180}
   m_IsPrefabAsset: 1
---- !u!1 &1538947716265164
+--- !u!1 &1958731458697180
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4370459831138546}
-  - component: {fileID: 23001782967063372}
-  - component: {fileID: 33594593762662442}
+  - component: {fileID: 4377296845878596}
+  - component: {fileID: 33176496563815794}
+  - component: {fileID: 23241598417904056}
   m_Layer: 0
-  m_Name: Meshes
+  m_Name: ArrangedObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4370459831138546
+--- !u!4 &4377296845878596
 Transform:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1538947716265164}
+  m_GameObject: {fileID: 1958731458697180}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -41,13 +41,13 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!23 &23001782967063372
+--- !u!23 &23241598417904056
 MeshRenderer:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1538947716265164}
-  m_Enabled: 1
+  m_GameObject: {fileID: 1958731458697180}
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -76,10 +76,10 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!33 &33594593762662442
+--- !u!33 &33176496563815794
 MeshFilter:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1538947716265164}
+  m_GameObject: {fileID: 1958731458697180}
   m_Mesh: {fileID: 0}

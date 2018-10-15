@@ -196,7 +196,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &285068054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,6 +241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefab: {fileID: 1538947716265164, guid: 06941fd06215a6c42b79bd36b5f8c202, type: 2}
   pTSViewer: {fileID: 285068054}
+  recenter: 1
 --- !u!114 &285068057
 MonoBehaviour:
   m_ObjectHideFlags: 0
