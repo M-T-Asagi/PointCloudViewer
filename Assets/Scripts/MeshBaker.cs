@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEditor;
 
 public class MeshBaker : MonoBehaviour
 {
@@ -11,11 +10,18 @@ public class MeshBaker : MonoBehaviour
     [SerializeField]
     PointCloudPTSViewer pTSViewer;
 
+    [SerializeField]
+    bool recenter = true;
+
     Vector3[] verticesBuff;
     Color[] colorsBuff;
     int[] indecesBuff;
 
     bool process;
+
+    Vector3? center = null;
+
+    ParallelOptions options;
 
     private void Start()
     {
@@ -23,6 +29,9 @@ public class MeshBaker : MonoBehaviour
         newObj.transform.SetParent(transform);
         newObj.transform.localPosition = Vector3.zero;
         newObj.transform.localRotation = Quaternion.identity;
+
+        options = new ParallelOptions();
+        options.MaxDegreeOfParallelism = 4;
     }
 
     // Update is called once per frame
@@ -30,6 +39,9 @@ public class MeshBaker : MonoBehaviour
     {
         if (process)
         {
+            if (recenter)
+                transform.GetChild(0).position = -center.Value;
+
             CreateChildObject();
             pTSViewer.Restart();
             process = false;
@@ -58,6 +70,11 @@ public class MeshBaker : MonoBehaviour
                 verticesBuff[i] = points[i].point;
                 colorsBuff[i] = points[i].color;
                 indecesBuff[i] = i;
+
+                if (center == null)
+                    center = points[i].point;
+                else
+                    center = (points[i].point + center) / 2f;
             }
         });
     }
