@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -9,12 +7,22 @@ public class MeshSaver : MonoBehaviour
     [SerializeField]
     bool saveMesh = true;
 
+    public bool SaveMesh
+    {
+        get { return saveMesh; }
+        set { saveMesh = value; }
+    }
+
     [SerializeField]
     bool savePrefab = true;
 
-    [SerializeField]
-    PointCloudPTSViewer pointCloudPTSViewer;
+    public bool SavePrefab
+    {
+        get { return saveMesh; }
+        set { saveMesh = value; }
+    }
 
+    GameObject target;
     bool process = false;
     string dirName;
 
@@ -29,8 +37,6 @@ public class MeshSaver : MonoBehaviour
     {
         if (!saveMesh)
             Destroy(this);
-
-        pointCloudPTSViewer.processUp += StartProcessSetUp;
     }
 
     // Update is called once per frame
@@ -41,17 +47,15 @@ public class MeshSaver : MonoBehaviour
 
         SaveMeshAll();
         if (savePrefab)
-            SavePrefab();
+            SavePrefabToAsset();
 
         process = false;
-        pointCloudPTSViewer.processUp -= StartProcessSetUp;
-        Destroy(this);
     }
 
     void SaveMeshAll()
     {
         int count = 0;
-        foreach (Transform child in transform.GetChild(0))
+        foreach (Transform child in target.transform)
         {
             AssetDatabase.CreateAsset(child.gameObject.GetComponent<MeshFilter>().mesh, dirName + "/mesh-" + count + ".asset");
             AssetDatabase.SaveAssets();
@@ -59,15 +63,15 @@ public class MeshSaver : MonoBehaviour
         }
     }
 
-    void SavePrefab()
+    void SavePrefabToAsset()
     {
-        PrefabUtility.CreatePrefab(dirName + "/meshes.prefab", transform.GetChild(0).gameObject);
+        PrefabUtility.CreatePrefab(dirName + "/meshes.prefab", target);
         AssetDatabase.SaveAssets();
-
     }
 
-    void StartProcessSetUp(object sender, PointCloudPTSViewer.ProcessUpArgs args)
+    public void StartProcessSetUp(GameObject _target)
     {
+        target = _target;
         if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             AssetDatabase.CreateFolder("Assets", "Resources");
         if (!AssetDatabase.IsValidFolder("Assets/Resources/SavedMeshes"))
