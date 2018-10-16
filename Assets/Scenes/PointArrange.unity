@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -113,83 +113,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &173961770
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 173961773}
-  - component: {fileID: 173961772}
-  - component: {fileID: 173961771}
-  m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!81 &173961771
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 173961770}
-  m_Enabled: 1
---- !u!20 &173961772
-Camera:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 173961770}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-  m_projectionMatrixMode: 1
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 60
-  orthographic: 0
-  orthographic size: 5
-  m_Depth: -1
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!4 &173961773
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 173961770}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &200755970
 GameObject:
   m_ObjectHideFlags: 0
@@ -219,9 +142,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshes:
-  - {fileID: 4300000, guid: 3bcaeae434fa71442b540ff04cbfc385, type: 2}
-  - {fileID: 4300000, guid: c22888e85943b78499dcab6aba78a707, type: 2}
-  - {fileID: 4300000, guid: e3b1f4e2ff20db644b7451d7fd5cacc4, type: 2}
+  - {fileID: 4300000, guid: 19b262a0ee9e5794ea1fe1aa5513d58e, type: 2}
+  - {fileID: 4300000, guid: 2687df418e27cd94aaaac1504fb3c7ed, type: 2}
+  - {fileID: 4300000, guid: fbd2038c62420e647b4555539da248b1, type: 2}
+  - {fileID: 4300000, guid: 66a9ab84c4efbf94bb2dd18987a1595e, type: 2}
+  - {fileID: 4300000, guid: 6e7dfe58ab5c70a4698be0a7ff3ebcc0, type: 2}
+  - {fileID: 4300000, guid: 85c64125655339640a09addfe69bb7f7, type: 2}
+  - {fileID: 4300000, guid: 9fdf99615199afc41aa027d651ae5323, type: 2}
+  - {fileID: 4300000, guid: c5c66a4be7b5554499cc5e56f66d89d5, type: 2}
+  - {fileID: 4300000, guid: cdcc78efaf38a1a478cc26fb39fcf515, type: 2}
+  - {fileID: 4300000, guid: 584edc93e7451ac458443ac9b7b03460, type: 2}
+  - {fileID: 4300000, guid: 5a6cf1a9f083023418992d621454f4d2, type: 2}
+  - {fileID: 4300000, guid: 84c5f24eb07beb2418d7c327c216cdca, type: 2}
+  - {fileID: 4300000, guid: d74b991895c283247809d86234036f50, type: 2}
+  - {fileID: 4300000, guid: 4200605e2f47b1342b67be70ec718233, type: 2}
+  - {fileID: 4300000, guid: d953d58faefaa4d4da6942f08880bff1, type: 2}
+  - {fileID: 4300000, guid: 490530b851f8a4e4db13a46e0a3e72e3, type: 2}
+  - {fileID: 4300000, guid: 9271367df4952bc4c8623ff7e02dcf09, type: 2}
   chunkSize: 10
   prefab: {fileID: 1958731458697180, guid: 15a013706faa1ac4e9e92212c35db3cb, type: 2}
   meshSaver: {fileID: 200755973}
@@ -236,7 +173,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &200755973
 MonoBehaviour:
@@ -251,69 +188,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   saveMesh: 1
   savePrefab: 1
---- !u!1 &1766210884
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1766210886}
-  - component: {fileID: 1766210885}
-  m_Layer: 0
-  m_Name: Directional Light
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!108 &1766210885
-Light:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1766210884}
-  m_Enabled: 1
-  serializedVersion: 8
-  m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
-  m_Range: 10
-  m_SpotAngle: 30
-  m_CookieSize: 10
-  m_Shadows:
-    m_Type: 2
-    m_Resolution: -1
-    m_CustomResolution: -1
-    m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
-  m_Cookie: {fileID: 0}
-  m_DrawHalo: 0
-  m_Flare: {fileID: 0}
-  m_RenderMode: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_Lightmapping: 4
-  m_LightShadowCasterMode: 0
-  m_AreaSize: {x: 1, y: 1}
-  m_BounceIntensity: 1
-  m_ColorTemperature: 6570
-  m_UseColorTemperature: 0
-  m_ShadowRadius: 0
-  m_ShadowAngle: 0
---- !u!4 &1766210886
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1766210884}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
