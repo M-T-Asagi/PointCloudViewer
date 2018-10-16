@@ -13,11 +13,15 @@ public class MeshBaker : MonoBehaviour
     [SerializeField]
     bool recenter = true;
 
+    [SerializeField]
+    MeshSaver meshSaver;
+
     Vector3[] verticesBuff;
     Color[] colorsBuff;
     int[] indecesBuff;
 
     bool process;
+    bool allPointsProcessed = false;
 
     Vector3? center = null;
 
@@ -32,6 +36,8 @@ public class MeshBaker : MonoBehaviour
 
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
+
+        pTSViewer.processUp += AllPointsProcessed;
     }
 
     // Update is called once per frame
@@ -43,8 +49,16 @@ public class MeshBaker : MonoBehaviour
                 transform.GetChild(0).position = -center.Value;
 
             CreateChildObject();
-            pTSViewer.Restart();
+            if (!allPointsProcessed)
+                pTSViewer.Restart();
+
             process = false;
+        }
+        else if (allPointsProcessed)
+        {
+            Debug.Log("all process up");
+            meshSaver.StartProcessSetUp(transform.GetChild(0).gameObject);
+            Destroy(this);
         }
     }
 
@@ -96,6 +110,7 @@ public class MeshBaker : MonoBehaviour
     private void OnDestroy()
     {
         Cleanup();
+        pTSViewer.processUp -= AllPointsProcessed;
     }
 
     void Cleanup()
@@ -103,5 +118,10 @@ public class MeshBaker : MonoBehaviour
         verticesBuff = null;
         colorsBuff = null;
         indecesBuff = null;
+    }
+
+    public void AllPointsProcessed(object sender, PointCloudPTSViewer.ProcessUpArgs args)
+    {
+        allPointsProcessed = true;
     }
 }
