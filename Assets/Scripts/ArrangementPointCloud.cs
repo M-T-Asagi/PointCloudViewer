@@ -19,7 +19,7 @@ public class ArrangementPointCloud : MonoBehaviour
     MeshSaver meshSaver;
 
     Dictionary<IndexedVector3, GameObject> generated;
-    Dictionary<IndexedVector3, List<PointCloudPTSViewer.CloudPoint>> buffPos;
+    Dictionary<IndexedVector3, List<CloudPoint>> buffPos;
 
     int processedCount = 0;
 
@@ -49,7 +49,7 @@ public class ArrangementPointCloud : MonoBehaviour
         if (!processed)
             return;
 
-        foreach (KeyValuePair<IndexedVector3, List<PointCloudPTSViewer.CloudPoint>> obj in buffPos)
+        foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> obj in buffPos)
         {
             Vector3 chunkOrigin = obj.Key.ToVector3() * chunkSize;
             if (!generated.ContainsKey(obj.Key))
@@ -114,7 +114,7 @@ public class ArrangementPointCloud : MonoBehaviour
 
     void SetPointsAsync(int verticesCount, Vector3[] vertices, Color[] colors)
     {
-        buffPos = new Dictionary<IndexedVector3, List<PointCloudPTSViewer.CloudPoint>>();
+        buffPos = new Dictionary<IndexedVector3, List<CloudPoint>>();
         Parallel.For(0, verticesCount, options, (i, loopState) =>
         {
             Vector3 vertex = vertices[i];
@@ -125,11 +125,11 @@ public class ArrangementPointCloud : MonoBehaviour
             if (!buffPos.ContainsKey(index))
             {
                 lock (Thread.CurrentContext)
-                    buffPos[index] = new List<PointCloudPTSViewer.CloudPoint>();
+                    buffPos[index] = new List<CloudPoint>();
             }
 
             lock (Thread.CurrentContext)
-                buffPos[index].Add(new PointCloudPTSViewer.CloudPoint(vertex, 1, color));
+                buffPos[index].Add(new CloudPoint(vertex, 1, color));
 
             if (destroyed)
             {

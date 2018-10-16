@@ -48,13 +48,13 @@ public class MeshBaker : MonoBehaviour
         }
     }
 
-    public void SetPoints(PointCloudPTSViewer.CloudPoint[] points)
+    public void SetPoints(CloudPoint[] points)
     {
         CreateMesh(points);
         process = true;
     }
 
-    async void CreateMesh(PointCloudPTSViewer.CloudPoint[] points)
+    async void CreateMesh(CloudPoint[] points)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
