@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +15,9 @@ public class ArrangementPointCloud : MonoBehaviour
     [SerializeField]
     GameObject prefab;
 
+    [SerializeField]
+    MeshSaver meshSaver;
+
     Dictionary<IndexedVector3, GameObject> generated;
     Dictionary<IndexedVector3, List<PointCloudPTSViewer.CloudPoint>> buffPos;
 
@@ -29,6 +31,10 @@ public class ArrangementPointCloud : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        GameObject child = new GameObject();
+        child.transform.SetParent(transform);
+        child.AddComponent<ChunkedMeshesManager>();
+
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
 
@@ -45,8 +51,12 @@ public class ArrangementPointCloud : MonoBehaviour
 
         foreach (KeyValuePair<IndexedVector3, List<PointCloudPTSViewer.CloudPoint>> obj in buffPos)
         {
+            Vector3 chunkOrigin = obj.Key.ToVector3() * chunkSize;
             if (!generated.ContainsKey(obj.Key))
-                generated[obj.Key] = Instantiate(prefab, transform);
+            {
+                generated[obj.Key] = Instantiate(prefab, transform.GetChild(0));
+                generated[obj.Key].transform.localPosition = chunkOrigin;
+            }
 
             MeshFilter filter = generated[obj.Key].GetComponent<MeshFilter>();
 
@@ -67,7 +77,7 @@ public class ArrangementPointCloud : MonoBehaviour
 
             for (int i = 0; i < obj.Value.Count; i++)
             {
-                vertices[oldVertexCount + i] = obj.Value[i].point;
+                vertices[oldVertexCount + i] = obj.Value[i].point - chunkOrigin;
                 colors[oldVertexCount + i] = obj.Value[i].color;
             }
 
@@ -81,7 +91,16 @@ public class ArrangementPointCloud : MonoBehaviour
         processed = false;
 
         if (processedCount < meshes.Count)
+        {
             CallSetPoint(meshes[processedCount].vertexCount, meshes[processedCount].vertices, meshes[processedCount].colors);
+        }
+        else
+        {
+            GameObject child = transform.GetChild(0).gameObject;
+            ChunkedMeshesManager m = child.GetComponent<ChunkedMeshesManager>();
+            m.chunkSize = chunkSize;
+            meshSaver.StartProcessSetUp(transform.GetChild(0).gameObject);
+        }
     }
 
     async void CallSetPoint(int verticesCount, Vector3[] vertices, Color[] colors)
