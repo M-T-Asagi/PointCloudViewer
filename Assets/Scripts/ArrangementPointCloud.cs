@@ -99,6 +99,7 @@ public class ArrangementPointCloud : MonoBehaviour
             GameObject child = transform.GetChild(0).gameObject;
             ChunkedMeshesManager m = child.GetComponent<ChunkedMeshesManager>();
             m.chunkSize = chunkSize;
+            m.chunksParent = child;
             meshSaver.StartProcessSetUp(transform.GetChild(0).gameObject);
         }
     }
@@ -120,7 +121,7 @@ public class ArrangementPointCloud : MonoBehaviour
             Vector3 vertex = vertices[i];
             Color color = colors[i];
             IndexedVector3 index = new IndexedVector3(
-                Mathf.FloorToInt(vertex.x / chunkSize), Mathf.FloorToInt(vertex.y / chunkSize), Mathf.FloorToInt(vertex.z / chunkSize));
+                Mathf.RoundToInt(vertex.x / chunkSize), Mathf.RoundToInt(vertex.y / chunkSize), Mathf.RoundToInt(vertex.z / chunkSize));
 
             if (!buffPos.ContainsKey(index))
             {

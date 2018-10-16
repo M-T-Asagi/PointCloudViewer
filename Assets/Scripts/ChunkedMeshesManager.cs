@@ -16,9 +16,9 @@ public class ChunkedMeshesManager : MonoBehaviour
         {
             chunkedObject.Add(
                 new IndexedVector3(
-                    Mathf.FloorToInt(child.position.x / chunkSize),
-                    Mathf.FloorToInt(child.position.y / chunkSize),
-                    Mathf.FloorToInt(child.position.z / chunkSize)),
+                    Mathf.RoundToInt(child.position.x / chunkSize),
+                    Mathf.RoundToInt(child.position.y / chunkSize),
+                    Mathf.RoundToInt(child.position.z / chunkSize)),
                 child.gameObject);
         }
     }
