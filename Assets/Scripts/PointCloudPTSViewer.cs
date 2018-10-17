@@ -25,8 +25,6 @@ public class PointCloudPTSViewer : MonoBehaviour
     Text textArea;
     [SerializeField]
     ProgressBarManager pbManager;
-    [SerializeField]
-    GameObject canvas;
 
     int pointNum = -1;
     int processedPointNum = 0;
@@ -159,7 +157,7 @@ public class PointCloudPTSViewer : MonoBehaviour
         {
             processUp?.Invoke(this, new ProcessUpArgs());
             Cleanup();
-            canvas.SetActive(false);
+            pbManager.Finish();
         }
     }
 
