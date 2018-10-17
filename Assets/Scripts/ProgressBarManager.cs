@@ -11,12 +11,12 @@ public class ProgressBarManager : MonoBehaviour
     [SerializeField]
     Image progressingBar;
 
-    RectTransform rTransform;
-    float max;
-
     [SerializeField]
     float state = 0;
     public float State { get { return state; } }
+
+    RectTransform rTransform;
+    float max;
 
     // Use this for initialization
     void Start()
@@ -36,5 +36,10 @@ public class ProgressBarManager : MonoBehaviour
         Vector2 sizeDelta = rTransform.sizeDelta;
         sizeDelta.x = max * state;
         rTransform.sizeDelta = sizeDelta;
+    }
+
+    public void Finish()
+    {
+        Destroy(gameObject);
     }
 }
