@@ -1,4 +1,4 @@
-﻿using System.Threading;
+﻿using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -8,37 +8,18 @@ public class MeshBaker : MonoBehaviour
     GameObject prefab;
 
     [SerializeField]
-    PtsToCloudPointConverter pTSViewer;
-
-    [SerializeField]
     bool recenter = true;
-
-    [SerializeField]
-    MeshSaver meshSaver;
 
     Vector3[] verticesBuff;
     Color[] colorsBuff;
     int[] indecesBuff;
 
     bool process;
-    bool allPointsProcessed = false;
 
     Vector3? center = null;
 
     ParallelOptions options;
-
-    private void Start()
-    {
-        GameObject newObj = new GameObject();
-        newObj.transform.SetParent(transform);
-        newObj.transform.localPosition = Vector3.zero;
-        newObj.transform.localRotation = Quaternion.identity;
-
-        options = new ParallelOptions();
-        options.MaxDegreeOfParallelism = 4;
-
-        pTSViewer.allProcessUp += AllPointsProcessed;
-    }
+    Transform meshesRoot = null;
 
     // Update is called once per frame
     void Update()
@@ -46,29 +27,33 @@ public class MeshBaker : MonoBehaviour
         if (process)
         {
             if (recenter)
-                transform.GetChild(0).position = -center.Value;
+                meshesRoot.position = -center.Value;
 
-            CreateChildObject();
-            if (!allPointsProcessed)
-                pTSViewer.Restart();
-
+            GenerateMeshes();
             process = false;
-        }
-        else if (allPointsProcessed)
-        {
-            Debug.Log("all process up");
-            meshSaver.StartProcessSetUp(transform.GetChild(0).gameObject);
-            Destroy(this);
         }
     }
 
-    public void SetPoints(CloudPoint[] points)
+    public void SetUp()
     {
-        CreateMesh(points);
+        meshesRoot = new GameObject().transform;
+        meshesRoot.SetParent(transform);
+        meshesRoot.localPosition = Vector3.zero;
+        meshesRoot.localRotation = Quaternion.identity;
+
+        options = new ParallelOptions();
+        options.MaxDegreeOfParallelism = 4;
+    }
+
+    public void SetPoints(CloudPoint[] _points)
+    {
+        CloudPoint[] points = new CloudPoint[_points.Length];
+        Array.Copy(_points, points, _points.Length);
+        generateMeshStuffs(points);
         process = true;
     }
 
-    async void CreateMesh(CloudPoint[] points)
+    async void generateMeshStuffs(CloudPoint[] points)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
@@ -93,7 +78,7 @@ public class MeshBaker : MonoBehaviour
         });
     }
 
-    void CreateChildObject()
+    void GenerateMeshes()
     {
         Debug.Log("creating child objects start!");
         Mesh mesh = new Mesh();
@@ -101,7 +86,7 @@ public class MeshBaker : MonoBehaviour
         mesh.colors = colorsBuff;
         mesh.SetIndices(indecesBuff, MeshTopology.Points, 0);
 
-        GameObject child = Instantiate(prefab, transform.GetChild(0));
+        GameObject child = Instantiate(prefab, meshesRoot);
         child.GetComponent<MeshFilter>().sharedMesh = mesh;
 
         Cleanup();
@@ -110,7 +95,6 @@ public class MeshBaker : MonoBehaviour
     private void OnDestroy()
     {
         Cleanup();
-        pTSViewer.allProcessUp -= AllPointsProcessed;
     }
 
     void Cleanup()
@@ -118,10 +102,5 @@ public class MeshBaker : MonoBehaviour
         verticesBuff = null;
         colorsBuff = null;
         indecesBuff = null;
-    }
-
-    public void AllPointsProcessed(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
-    {
-        allPointsProcessed = true;
     }
 }
