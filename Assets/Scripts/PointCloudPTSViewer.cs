@@ -166,6 +166,7 @@ public class PointCloudPTSViewer : MonoBehaviour
         Debug.Log("cleaning up!");
 
         reader.Close();
-        Destroy(this);
+        if (!destroy)
+            Destroy(this);
     }
 }
