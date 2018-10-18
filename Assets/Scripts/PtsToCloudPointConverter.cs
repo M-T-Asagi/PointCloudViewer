@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System;
 using System.IO;
 using System.Threading;
@@ -58,7 +57,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
         totalPointCount = Int32.Parse(fl);
     }
 
-    public void StartProcessing()
+    public void Process()
     {
         if (continuos)
         {
