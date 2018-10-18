@@ -4,6 +4,20 @@ using UnityEngine;
 
 public class MeshBaker : MonoBehaviour
 {
+    public class FinishBakingArgs : EventArgs
+    {
+    }
+
+    public class FinishGenerateArgs : EventArgs
+    {
+        public Mesh mesh;
+
+        public FinishGenerateArgs(Mesh _mesh)
+        {
+            mesh = _mesh;
+        }
+    }
+
     [SerializeField]
     GameObject prefab;
 
@@ -20,6 +34,9 @@ public class MeshBaker : MonoBehaviour
 
     ParallelOptions options;
     Transform meshesRoot = null;
+
+    public EventHandler<FinishBakingArgs> finishBaking;
+    public EventHandler<FinishGenerateArgs> finishGenerate;
 
     // Update is called once per frame
     void Update()
@@ -49,11 +66,11 @@ public class MeshBaker : MonoBehaviour
     {
         CloudPoint[] points = new CloudPoint[_points.Length];
         Array.Copy(_points, points, _points.Length);
-        generateMeshStuffs(points);
+        GenerateMeshStuffs(points);
         process = true;
     }
 
-    async void generateMeshStuffs(CloudPoint[] points)
+    async void GenerateMeshStuffs(CloudPoint[] points)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
@@ -76,6 +93,7 @@ public class MeshBaker : MonoBehaviour
                     center = (points[i].point + center) / 2f;
             }
         });
+        GenerateMeshes();
     }
 
     void GenerateMeshes()
@@ -86,10 +104,17 @@ public class MeshBaker : MonoBehaviour
         mesh.colors = colorsBuff;
         mesh.SetIndices(indecesBuff, MeshTopology.Points, 0);
 
+        finishGenerate?.Invoke(this, new FinishGenerateArgs(mesh));
+
+        Cleanup();
+    }
+
+    public void BakeMeshChildToNewObject(Mesh mesh)
+    {
         GameObject child = Instantiate(prefab, meshesRoot);
         child.GetComponent<MeshFilter>().sharedMesh = mesh;
 
-        Cleanup();
+        finishBaking?.Invoke(this, new FinishBakingArgs());
     }
 
     private void OnDestroy()
