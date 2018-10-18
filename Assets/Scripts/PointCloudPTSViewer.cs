@@ -1,16 +1,25 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class PointCloudPTSViewer : MonoBehaviour
 {
+    public class AllProcessUpArgs : EventArgs
+    {
+    }
+
     public class ProcessUpArgs : EventArgs
     {
+        public CloudPoint[] cloudPoints;
+        public ProcessUpArgs(CloudPoint[] _cloudPoints)
+        {
+            cloudPoints = new CloudPoint[_cloudPoints.Length];
+            Array.Copy(_cloudPoints, cloudPoints, _cloudPoints.Length);
+        }
     }
 
     [SerializeField]
@@ -19,8 +28,6 @@ public class PointCloudPTSViewer : MonoBehaviour
     int maxPointsNumInAnObject = 300000;
     [SerializeField]
     string filePath;
-    [SerializeField]
-    MeshBaker meshBaker;
     [SerializeField]
     Text textArea;
     [SerializeField]
@@ -35,6 +42,7 @@ public class PointCloudPTSViewer : MonoBehaviour
 
     ParallelOptions options;
 
+    public EventHandler<AllProcessUpArgs> allProcessUp;
     public EventHandler<ProcessUpArgs> processUp;
 
     // Use this for initialization
@@ -137,8 +145,8 @@ public class PointCloudPTSViewer : MonoBehaviour
             currentCount++;
         });
 
-        Debug.Log("processed! : " + currentCount + "/" + points.Length);
-        meshBaker.SetPoints(points);
+        Debug.Log("process up! : " + currentCount + "/" + points.Length);
+        processUp?.Invoke(this, new ProcessUpArgs(points));
     }
 
     private void OnDestroy()
@@ -155,7 +163,7 @@ public class PointCloudPTSViewer : MonoBehaviour
         }
         else
         {
-            processUp?.Invoke(this, new ProcessUpArgs());
+            allProcessUp?.Invoke(this, new AllProcessUpArgs());
             Cleanup();
             pbManager.Finish();
         }

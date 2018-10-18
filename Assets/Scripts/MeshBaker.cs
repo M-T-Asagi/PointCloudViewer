@@ -37,7 +37,7 @@ public class MeshBaker : MonoBehaviour
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
 
-        pTSViewer.processUp += AllPointsProcessed;
+        pTSViewer.allProcessUp += AllPointsProcessed;
     }
 
     // Update is called once per frame
@@ -110,7 +110,7 @@ public class MeshBaker : MonoBehaviour
     private void OnDestroy()
     {
         Cleanup();
-        pTSViewer.processUp -= AllPointsProcessed;
+        pTSViewer.allProcessUp -= AllPointsProcessed;
     }
 
     void Cleanup()
@@ -120,7 +120,7 @@ public class MeshBaker : MonoBehaviour
         indecesBuff = null;
     }
 
-    public void AllPointsProcessed(object sender, PointCloudPTSViewer.ProcessUpArgs args)
+    public void AllPointsProcessed(object sender, PointCloudPTSViewer.AllProcessUpArgs args)
     {
         allPointsProcessed = true;
     }
