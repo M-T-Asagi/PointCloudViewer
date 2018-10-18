@@ -25,16 +25,16 @@ public class PtsToCloudPointConverter : MonoBehaviour
     float sizeScale = 0.0001f;
     [SerializeField]
     int maxPointsNumInAnObject = 300000;
-    [SerializeField]
-    string filePath;
-    [SerializeField]
-    Text textArea;
-    [SerializeField]
-    ProgressBarManager pbManager;
 
-    int pointNum = -1;
-    int processedPointNum = 0;
-    int processedCount = 0;
+    int totalPointCount = -1;
+    public int TotalPointCount { get { return totalPointCount; } }
+    int processedPointCount = 0;
+    public int ProcessedPointCount { get { return processedPointCount; } }
+    int processedSectionCount = 0;
+    public int ProcessedSectionCount { get { return processedSectionCount; } }
+    int totalSectionCount = 0;
+    public int TotalSectionCount { get { return totalSectionCount; } }
+
     StreamReader reader = null;
     bool continuos = true;
     bool destroy = false;
@@ -47,47 +47,44 @@ public class PtsToCloudPointConverter : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        if (filePath == null || filePath == "")
-            return;
-
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
-
-        SetupPointScaning(filePath);
     }
 
-    void SetupPointScaning(string path)
+    public void SetupPointScaning(string path)
     {
         reader = new StreamReader(path);
         string fl = reader.ReadLine();
-        pointNum = Int32.Parse(fl);
-        Restart();
+        totalPointCount = Int32.Parse(fl);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void StartProcessing()
     {
-        if (pointNum >= 0)
+        if (continuos)
         {
-            pbManager.UpdateState((float)processedPointNum / (float)pointNum);
-            textArea.text = processedPointNum + " /\n" + pointNum;
+            CallSetPoint();
+        }
+        else
+        {
+            allProcessUp?.Invoke(this, new AllProcessUpArgs());
+            Cleanup();
         }
     }
 
     async void CallSetPoint()
     {
         await Task.Run(() => SetPointsAsync());
-        processedCount++;
+        processedSectionCount++;
 
         Debug.Log("Setting points process is finished!");
-        Debug.Log("Processed count : " + processedCount);
+        Debug.Log("Processed count : " + processedSectionCount);
     }
 
     void SetPointsAsync()
     {
         Debug.Log("Scan start!");
 
-        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, pointNum - maxPointsNumInAnObject * (processedCount + 1));
+        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, totalPointCount - maxPointsNumInAnObject * (processedSectionCount + 1));
         Debug.Log("new points array count : " + newPointsArrayCount);
 
         continuos = (newPointsArrayCount >= maxPointsNumInAnObject);
@@ -139,33 +136,13 @@ public class PtsToCloudPointConverter : MonoBehaviour
 
             lock (Thread.CurrentContext)
             {
-                processedPointNum++;
+                processedPointCount++;
             }
             currentCount++;
         });
 
         Debug.Log("process up! : " + currentCount + "/" + points.Length);
         processUp?.Invoke(this, new ProcessUpArgs(points));
-    }
-
-    private void OnDestroy()
-    {
-        destroy = true;
-        Cleanup();
-    }
-
-    public void Restart()
-    {
-        if (continuos)
-        {
-            CallSetPoint();
-        }
-        else
-        {
-            allProcessUp?.Invoke(this, new AllProcessUpArgs());
-            Cleanup();
-            pbManager.Finish();
-        }
     }
 
     void Cleanup()
@@ -175,5 +152,11 @@ public class PtsToCloudPointConverter : MonoBehaviour
         reader.Close();
         if (!destroy)
             Destroy(this);
+    }
+
+    private void OnDestroy()
+    {
+        destroy = true;
+        Cleanup();
     }
 }
