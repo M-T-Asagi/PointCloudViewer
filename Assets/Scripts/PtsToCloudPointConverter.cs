@@ -57,16 +57,18 @@ public class PtsToCloudPointConverter : MonoBehaviour
         totalPointCount = Int32.Parse(fl);
     }
 
-    public void Process()
+    public bool Process()
     {
         if (continuos)
         {
             CallSetPoint();
+            return true;
         }
         else
         {
             allProcessUp?.Invoke(this, new AllProcessUpArgs());
             Cleanup();
+            return false;
         }
     }
 
@@ -147,10 +149,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
     void Cleanup()
     {
         Debug.Log("cleaning up!");
-
         reader.Close();
-        if (!destroy)
-            Destroy(this);
     }
 
     private void OnDestroy()
