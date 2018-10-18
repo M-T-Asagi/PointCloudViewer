@@ -67,6 +67,7 @@ public class MeshBaker : MonoBehaviour
         CloudPoint[] points = new CloudPoint[_points.Length];
         Array.Copy(_points, points, _points.Length);
         GenerateMeshStuffs(points);
+
         process = true;
     }
 
@@ -93,7 +94,6 @@ public class MeshBaker : MonoBehaviour
                     center = (points[i].point + center) / 2f;
             }
         });
-        GenerateMeshes();
     }
 
     void GenerateMeshes()
