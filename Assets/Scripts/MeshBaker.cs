@@ -8,7 +8,7 @@ public class MeshBaker : MonoBehaviour
     GameObject prefab;
 
     [SerializeField]
-    PointCloudPTSViewer pTSViewer;
+    PtsToCloudPointConverter pTSViewer;
 
     [SerializeField]
     bool recenter = true;
@@ -120,7 +120,7 @@ public class MeshBaker : MonoBehaviour
         indecesBuff = null;
     }
 
-    public void AllPointsProcessed(object sender, PointCloudPTSViewer.AllProcessUpArgs args)
+    public void AllPointsProcessed(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
     {
         allPointsProcessed = true;
     }

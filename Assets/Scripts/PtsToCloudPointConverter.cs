@@ -4,9 +4,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
-public class PointCloudPTSViewer : MonoBehaviour
+public class PtsToCloudPointConverter : MonoBehaviour
 {
     public class AllProcessUpArgs : EventArgs
     {
