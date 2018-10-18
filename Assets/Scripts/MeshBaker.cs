@@ -28,12 +28,15 @@ public class MeshBaker : MonoBehaviour
     Color[] colorsBuff;
     int[] indecesBuff;
 
-    bool process;
+    bool generate = false;
+    bool bake = false;
 
     Vector3? center = null;
 
     ParallelOptions options;
     Transform meshesRoot = null;
+
+    Mesh meshBuff;
 
     public EventHandler<FinishBakingArgs> finishBaking;
     public EventHandler<FinishGenerateArgs> finishGenerate;
@@ -41,13 +44,13 @@ public class MeshBaker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (process)
+        if (generate)
         {
             if (recenter)
                 meshesRoot.position = -center.Value;
 
             GenerateMeshes();
-            process = false;
+            generate = false;
         }
     }
 
@@ -68,7 +71,7 @@ public class MeshBaker : MonoBehaviour
         Array.Copy(_points, points, _points.Length);
         GenerateMeshStuffs(points);
 
-        process = true;
+        generate = true;
     }
 
     async void GenerateMeshStuffs(CloudPoint[] points)
@@ -109,11 +112,18 @@ public class MeshBaker : MonoBehaviour
         Cleanup();
     }
 
-    public void BakeMeshChildToNewObject(Mesh mesh)
+    public void SetMeshToBake(Mesh mesh)
+    {
+        meshBuff = mesh;
+        bake = true;
+    }
+
+    private void BakingMeshToNewObject()
     {
         GameObject child = Instantiate(prefab, meshesRoot);
-        child.GetComponent<MeshFilter>().sharedMesh = mesh;
+        child.GetComponent<MeshFilter>().sharedMesh = meshBuff;
 
+        meshBuff = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
     }
 
