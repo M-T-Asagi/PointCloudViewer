@@ -18,13 +18,23 @@ public class MeshSaver : MonoBehaviour
 
     const bool saveMesh = true;
 
-    GameObject target;
+    GameObject prefabRoot = null;
     bool process = false;
     string path;
 
-    public void Process(GameObject _target)
+    Mesh[] targetMeshes = null;
+
+    public EventHandler<EventArgs> finishSaving;
+
+    public void Process(Mesh[] meshes, GameObject root = null)
     {
-        target = _target;
+        targetMeshes = meshes;
+        prefabRoot = root;
+        Setup();
+    }
+
+    void Setup()
+    {
         if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             AssetDatabase.CreateFolder("Assets", "Resources");
         if (!AssetDatabase.IsValidFolder("Assets/Resources/SavedMeshes"))
@@ -48,18 +58,20 @@ public class MeshSaver : MonoBehaviour
             return;
 
         SaveMeshAll();
-        if (savePrefab)
+        if (savePrefab && prefabRoot != null)
             SavePrefabToAsset();
 
+        finishSaving?.Invoke(this, new EventArgs());
         process = false;
     }
 
     void SaveMeshAll()
     {
         int count = 0;
-        foreach (Transform child in target.transform)
+
+        foreach (Mesh mesh in targetMeshes)
         {
-            AssetDatabase.CreateAsset(child.gameObject.GetComponent<MeshFilter>().mesh, path + "/mesh-" + count + ".asset");
+            AssetDatabase.CreateAsset(mesh, path + "/mesh-" + count + ".asset");
             AssetDatabase.SaveAssets();
             count++;
         }
@@ -67,7 +79,7 @@ public class MeshSaver : MonoBehaviour
 
     void SavePrefabToAsset()
     {
-        PrefabUtility.CreatePrefab(path + "/meshes.prefab", target);
+        PrefabUtility.CreatePrefab(path + "/meshes.prefab", prefabRoot);
         AssetDatabase.SaveAssets();
     }
 }
