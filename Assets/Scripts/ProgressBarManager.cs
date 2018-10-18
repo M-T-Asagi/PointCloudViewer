@@ -15,6 +15,7 @@ public class ProgressBarManager : MonoBehaviour
     float state = 0;
     public float State { get { return state; } }
 
+    Text stateText;
     RectTransform rTransform;
     float max;
 
@@ -23,6 +24,7 @@ public class ProgressBarManager : MonoBehaviour
     {
         rTransform = progressingBar.rectTransform;
         max = baseBar.rectTransform.sizeDelta.x;
+        stateText = transform.Find("StateText").GetComponent<Text>();
     }
 
     public void UpdateState(float _state)
@@ -36,6 +38,11 @@ public class ProgressBarManager : MonoBehaviour
         Vector2 sizeDelta = rTransform.sizeDelta;
         sizeDelta.x = max * state;
         rTransform.sizeDelta = sizeDelta;
+    }
+
+    public void UpdateStateText(string text)
+    {
+        stateText.text = text;
     }
 
     public void Finish()
