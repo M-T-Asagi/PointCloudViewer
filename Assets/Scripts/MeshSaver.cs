@@ -5,38 +5,40 @@ using UnityEditor;
 public class MeshSaver : MonoBehaviour
 {
     [SerializeField]
-    bool saveMesh = true;
-
-    public bool SaveMesh
-    {
-        get { return saveMesh; }
-        set { saveMesh = value; }
-    }
-
-    [SerializeField]
     bool savePrefab = true;
 
     public bool SavePrefab
     {
-        get { return saveMesh; }
-        set { saveMesh = value; }
+        get { return savePrefab; }
+        set { savePrefab = value; }
     }
+
+    [SerializeField]
+    string dirName = "";
+
+    const bool saveMesh = true;
 
     GameObject target;
     bool process = false;
-    string dirName;
+    string path;
 
-    private void OnValidate()
+    public void Process(GameObject _target)
     {
-        if (savePrefab)
-            saveMesh = true;
-    }
+        target = _target;
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        if (!AssetDatabase.IsValidFolder("Assets/Resources/SavedMeshes"))
+            AssetDatabase.CreateFolder("Assets/Resources", "SavedMeshes");
 
-    // Use this for initialization
-    void Start()
-    {
-        if (!saveMesh)
-            Destroy(this);
+        string time = DateTime.Now.ToFileTimeUtc().ToString();
+        string _dirName = dirName + "-" + time;
+        path = "Assets/Resources/SavedMeshes/" + _dirName;
+
+        AssetDatabase.CreateFolder("Assets/Resources/SavedMeshes", _dirName);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        process = true;
     }
 
     // Update is called once per frame
@@ -57,7 +59,7 @@ public class MeshSaver : MonoBehaviour
         int count = 0;
         foreach (Transform child in target.transform)
         {
-            AssetDatabase.CreateAsset(child.gameObject.GetComponent<MeshFilter>().mesh, dirName + "/mesh-" + count + ".asset");
+            AssetDatabase.CreateAsset(child.gameObject.GetComponent<MeshFilter>().mesh, path + "/mesh-" + count + ".asset");
             AssetDatabase.SaveAssets();
             count++;
         }
@@ -65,25 +67,7 @@ public class MeshSaver : MonoBehaviour
 
     void SavePrefabToAsset()
     {
-        PrefabUtility.CreatePrefab(dirName + "/meshes.prefab", target);
+        PrefabUtility.CreatePrefab(path + "/meshes.prefab", target);
         AssetDatabase.SaveAssets();
-    }
-
-    public void StartProcessSetUp(GameObject _target)
-    {
-        target = _target;
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        if (!AssetDatabase.IsValidFolder("Assets/Resources/SavedMeshes"))
-            AssetDatabase.CreateFolder("Assets/Resources", "SavedMeshes");
-
-        string time = DateTime.Now.ToFileTimeUtc().ToString();
-        dirName = "Assets/Resources/SavedMeshes/" + time;
-
-        AssetDatabase.CreateFolder("Assets/Resources/SavedMeshes", time);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
-        process = true;
     }
 }
