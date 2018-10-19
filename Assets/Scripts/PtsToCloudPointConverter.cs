@@ -55,6 +55,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
         reader = new StreamReader(path);
         string fl = reader.ReadLine();
         totalPointCount = Int32.Parse(fl);
+        totalSectionCount = Mathf.CeilToInt(totalPointCount / maxPointsNumInAnObject);
     }
 
     public bool Process()
