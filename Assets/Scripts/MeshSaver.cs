@@ -4,14 +4,6 @@ using UnityEditor;
 
 public class MeshSaver : MonoBehaviour
 {
-    [SerializeField]
-    bool savePrefab = true;
-
-    public bool SavePrefab
-    {
-        get { return savePrefab; }
-        set { savePrefab = value; }
-    }
 
     [SerializeField]
     string dirName = "";
@@ -58,7 +50,7 @@ public class MeshSaver : MonoBehaviour
             return;
 
         SaveMeshAll();
-        if (savePrefab && prefabRoot != null)
+        if (prefabRoot != null)
             SavePrefabToAsset();
 
         finishSaving?.Invoke(this, new EventArgs());
