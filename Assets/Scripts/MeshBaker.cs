@@ -46,12 +46,16 @@ public class MeshBaker : MonoBehaviour
     {
         if (generate)
         {
-            if (recenter)
-                meshesRoot.position = -center.Value;
-
             GenerateMeshes();
             generate = false;
         }
+        if (bake)
+        {
+            BakingMeshToNewObject();
+            bake = false;
+        }
+        if (recenter && center.HasValue)
+            meshesRoot.position = -center.Value;
     }
 
     public void SetUp(Transform _root = null)
