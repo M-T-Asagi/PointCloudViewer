@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class ArrangementPointCloud : MonoBehaviour
+public class PointsArranger : MonoBehaviour
 {
     public class FinishProcessArgs : EventArgs
     {
