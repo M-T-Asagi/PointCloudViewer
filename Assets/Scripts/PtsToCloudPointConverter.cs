@@ -149,8 +149,10 @@ public class PtsToCloudPointConverter : MonoBehaviour
 
     void Cleanup()
     {
+        if (reader != null)
+            reader.Close();
+
         Debug.Log("cleaning up!");
-        reader.Close();
     }
 
     private void OnDestroy()
