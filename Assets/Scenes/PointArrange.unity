@@ -141,24 +141,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cbcea31f4a07a04d804f797fa11162c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshes:
-  - {fileID: 4300000, guid: 19b262a0ee9e5794ea1fe1aa5513d58e, type: 2}
-  - {fileID: 4300000, guid: 2687df418e27cd94aaaac1504fb3c7ed, type: 2}
-  - {fileID: 4300000, guid: fbd2038c62420e647b4555539da248b1, type: 2}
-  - {fileID: 4300000, guid: 66a9ab84c4efbf94bb2dd18987a1595e, type: 2}
-  - {fileID: 4300000, guid: 6e7dfe58ab5c70a4698be0a7ff3ebcc0, type: 2}
-  - {fileID: 4300000, guid: 85c64125655339640a09addfe69bb7f7, type: 2}
-  - {fileID: 4300000, guid: 9fdf99615199afc41aa027d651ae5323, type: 2}
-  - {fileID: 4300000, guid: c5c66a4be7b5554499cc5e56f66d89d5, type: 2}
-  - {fileID: 4300000, guid: cdcc78efaf38a1a478cc26fb39fcf515, type: 2}
-  - {fileID: 4300000, guid: 584edc93e7451ac458443ac9b7b03460, type: 2}
-  - {fileID: 4300000, guid: 5a6cf1a9f083023418992d621454f4d2, type: 2}
-  - {fileID: 4300000, guid: 84c5f24eb07beb2418d7c327c216cdca, type: 2}
-  - {fileID: 4300000, guid: d74b991895c283247809d86234036f50, type: 2}
-  - {fileID: 4300000, guid: 4200605e2f47b1342b67be70ec718233, type: 2}
-  - {fileID: 4300000, guid: d953d58faefaa4d4da6942f08880bff1, type: 2}
-  - {fileID: 4300000, guid: 490530b851f8a4e4db13a46e0a3e72e3, type: 2}
-  - {fileID: 4300000, guid: 9271367df4952bc4c8623ff7e02dcf09, type: 2}
+  originalMeshes:
+  - {fileID: 4300000, guid: deb50f57f9f187e478ce57abc9114375, type: 2}
+  - {fileID: 4300000, guid: cbe89bdccff513b4a928c9eb12378396, type: 2}
+  - {fileID: 4300000, guid: 935dc683b34d49c41b403355687f19ec, type: 2}
+  - {fileID: 4300000, guid: 262b0e56b632ba645a5faf95ed77284f, type: 2}
+  - {fileID: 4300000, guid: 075c169944c45a54a8078c2dab1e6306, type: 2}
+  - {fileID: 4300000, guid: 0ac9a82a415ff5a4781d82644572edc0, type: 2}
+  - {fileID: 4300000, guid: 376ee8e0f0356454fa935bbf62601c39, type: 2}
+  - {fileID: 4300000, guid: 826633928e23a2f4d985fc7187468e3c, type: 2}
+  - {fileID: 4300000, guid: 16c6e607bbe592547adcb7bc7d66d12b, type: 2}
+  - {fileID: 4300000, guid: 4fd7f298a81d78f46981c0b5e3d459bd, type: 2}
+  - {fileID: 4300000, guid: 6e4bf9954d63ef64c96950bd8996e024, type: 2}
+  - {fileID: 4300000, guid: 527716a38622c784da25fdbcd3c7d43e, type: 2}
+  - {fileID: 4300000, guid: 9dd55a98a3501f74eabd794b847c435a, type: 2}
+  - {fileID: 4300000, guid: 03d61abdad4c6a34689754d0eac8826a, type: 2}
+  - {fileID: 4300000, guid: a1600c8b107443242885c3562751d14a, type: 2}
+  - {fileID: 4300000, guid: ad474a4977d47de4d8ad59953414f181, type: 2}
+  - {fileID: 4300000, guid: 86ceb7f5a94cef4408ce34bcffbeb734, type: 2}
   chunkSize: 10
   prefab: {fileID: 1958731458697180, guid: 15a013706faa1ac4e9e92212c35db3cb, type: 2}
   meshSaver: {fileID: 200755973}
@@ -186,5 +186,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54bac2ff370d6934e95d4def1caa74d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveMesh: 1
-  savePrefab: 1
+  fileNameHeader: chunked

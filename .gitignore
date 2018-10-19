@@ -35,5 +35,6 @@ sysinfo.txt
 *.apk
 *.unitypackage
 Assets/Resouces
+Assets/Resources
 ARectTransform rTransform;
 Recordings
