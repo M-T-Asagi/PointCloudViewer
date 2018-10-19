@@ -54,12 +54,14 @@ public class MeshBaker : MonoBehaviour
         }
     }
 
-    public void SetUp()
+    public void SetUp(Transform _root = null)
     {
-        meshesRoot = new GameObject().transform;
-        meshesRoot.SetParent(transform);
-        meshesRoot.localPosition = Vector3.zero;
-        meshesRoot.localRotation = Quaternion.identity;
+        if (_root)
+        {
+            meshesRoot = _root;
+            meshesRoot.localPosition = Vector3.zero;
+            meshesRoot.localRotation = Quaternion.identity;
+        }
 
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
@@ -120,7 +122,12 @@ public class MeshBaker : MonoBehaviour
 
     private void BakingMeshToNewObject()
     {
-        GameObject child = Instantiate(prefab, meshesRoot);
+        GameObject child;
+        if (meshesRoot)
+            child = Instantiate(prefab, meshesRoot);
+        else
+            child = Instantiate(prefab);
+
         child.GetComponent<MeshFilter>().sharedMesh = meshBuff;
 
         meshBuff = null;
