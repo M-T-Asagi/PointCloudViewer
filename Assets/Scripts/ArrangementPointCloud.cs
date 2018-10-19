@@ -6,131 +6,65 @@ using UnityEngine;
 
 public class ArrangementPointCloud : MonoBehaviour
 {
-    [SerializeField]
-    List<Mesh> meshes;
+    public class FinishProcessArgs : EventArgs
+    {
+        public Dictionary<IndexedVector3, List<CloudPoint>> chunkedPositions;
+
+        public FinishProcessArgs(Dictionary<IndexedVector3, List<CloudPoint>> _chunkedPositions)
+        {
+            chunkedPositions = new Dictionary<IndexedVector3, List<CloudPoint>>(_chunkedPositions);
+        }
+    }
 
     [SerializeField]
-    float chunkSize = 0.1f;
+    float chunkSize = 10f;
 
-    [SerializeField]
-    GameObject prefab;
+    public EventHandler<FinishProcessArgs> finishProcess;
 
-    [SerializeField]
-    MeshSaver meshSaver;
-
-    Dictionary<IndexedVector3, GameObject> generated;
-    Dictionary<IndexedVector3, List<CloudPoint>> buffPos;
-
-    int processedCount = 0;
-
+    Dictionary<IndexedVector3, List<CloudPoint>> chunkedPositions;
     ParallelOptions options;
 
-    bool processed = false;
     bool destroyed = false;
 
     // Use this for initialization
     void Start()
     {
-        GameObject child = new GameObject();
-        child.transform.SetParent(transform);
-        child.AddComponent<ChunkedMeshesManager>();
-
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
-
-        generated = new Dictionary<IndexedVector3, GameObject>();
-
-        CallSetPoint(meshes[processedCount].vertexCount, meshes[processedCount].vertices, meshes[processedCount].colors);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Setup(GameObject parentObject)
     {
-        if (!processed)
-            return;
-
-        foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> obj in buffPos)
-        {
-            Vector3 chunkOrigin = obj.Key.ToVector3() * chunkSize;
-            if (!generated.ContainsKey(obj.Key))
-            {
-                generated[obj.Key] = Instantiate(prefab, transform.GetChild(0));
-                generated[obj.Key].transform.localPosition = chunkOrigin;
-            }
-
-            MeshFilter filter = generated[obj.Key].GetComponent<MeshFilter>();
-
-            int oldVertexCount = (filter.mesh != null) ? filter.mesh.vertexCount : 0;
-            int newVertexCount = oldVertexCount + obj.Value.Count;
-
-            Vector3[] vertices = new Vector3[newVertexCount];
-            Color[] colors = new Color[newVertexCount];
-            int[] indices = new int[newVertexCount];
-
-            if (filter.mesh != null)
-            {
-                Array.Copy(filter.mesh.vertices, vertices, oldVertexCount);
-                Array.Copy(filter.mesh.colors, colors, oldVertexCount);
-                for (int i = 0; i < oldVertexCount; i++)
-                    indices[i] = i;
-            }
-
-            for (int i = 0; i < obj.Value.Count; i++)
-            {
-                vertices[oldVertexCount + i] = obj.Value[i].point - chunkOrigin;
-                colors[oldVertexCount + i] = obj.Value[i].color;
-            }
-
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.colors = colors;
-            mesh.SetIndices(indices, MeshTopology.Points, 0);
-            filter.sharedMesh = mesh;
-        }
-
-        processed = false;
-
-        if (processedCount < meshes.Count)
-        {
-            CallSetPoint(meshes[processedCount].vertexCount, meshes[processedCount].vertices, meshes[processedCount].colors);
-        }
-        else
-        {
-            GameObject child = transform.GetChild(0).gameObject;
-            ChunkedMeshesManager m = child.GetComponent<ChunkedMeshesManager>();
-            m.chunkSize = chunkSize;
-            m.chunksParent = child;
-            meshSaver.StartProcessSetUp(transform.GetChild(0).gameObject);
-        }
+        parentObject.AddComponent<ChunkedMeshesManager>();
     }
 
-    async void CallSetPoint(int verticesCount, Vector3[] vertices, Color[] colors)
+    public void Process(Vector3[] _vertices, Color[] _colors)
     {
-        Debug.Log("Start chunking.");
-        await Task.Run(() => SetPointsAsync(verticesCount, vertices, colors));
-        Debug.Log("Finish one of processes.");
-        processed = true;
-        processedCount++;
+        Vector3[] vertices = new Vector3[_vertices.Length];
+        Array.Copy(_vertices, vertices, _vertices.Length);
+        Color[] colors = new Color[_colors.Length];
+        Array.Copy(_colors, colors, _colors.Length);
+        SetPointsWithVertices(vertices, colors);
     }
 
-    void SetPointsAsync(int verticesCount, Vector3[] vertices, Color[] colors)
+    async void SetPointsWithVertices(Vector3[] vertices, Color[] colors)
     {
-        buffPos = new Dictionary<IndexedVector3, List<CloudPoint>>();
-        Parallel.For(0, verticesCount, options, (i, loopState) =>
+        await Task.Run(() =>
         {
-            Vector3 vertex = vertices[i];
-            Color color = colors[i];
-            IndexedVector3 index = new IndexedVector3(
-                Mathf.RoundToInt(vertex.x / chunkSize), Mathf.RoundToInt(vertex.y / chunkSize), Mathf.RoundToInt(vertex.z / chunkSize));
+            return ConvertingProcess(vertices, colors);
+        }).ContinueWith((res) =>
+        {
+            SetPointsAsync(res.Result);
+        });
+    }
 
-            if (!buffPos.ContainsKey(index))
-            {
-                lock (Thread.CurrentContext)
-                    buffPos[index] = new List<CloudPoint>();
-            }
-
+    CloudPoint[] ConvertingProcess(Vector3[] vertices, Color[] colors)
+    {
+        CloudPoint[] cloudPoints = new CloudPoint[vertices.Length];
+        Parallel.For(0, vertices.Length, options, (i, loopState) =>
+        {
             lock (Thread.CurrentContext)
-                buffPos[index].Add(new CloudPoint(vertex, 1, color));
+                cloudPoints[i] = new CloudPoint(vertices[i], 1, colors[i]);
 
             if (destroyed)
             {
@@ -138,6 +72,52 @@ public class ArrangementPointCloud : MonoBehaviour
                 return;
             }
         });
+        return cloudPoints;
+    }
+
+    public void Process(CloudPoint[] points)
+    {
+        CloudPoint[] cloudPoints = new CloudPoint[points.Length];
+        Array.Copy(points, cloudPoints, points.Length);
+        SetPoints(cloudPoints);
+    }
+
+    async void SetPoints(CloudPoint[] points)
+    {
+        await Task.Run(() => SetPointsAsync(points));
+    }
+
+    void SetPointsAsync(CloudPoint[] points)
+    {
+        Debug.Log("Start chunking.");
+
+        Parallel.For(0, points.Length, options, (i, loopState) =>
+        {
+            IndexedVector3 index = new IndexedVector3(
+                Mathf.RoundToInt(points[i].point.x / chunkSize), Mathf.RoundToInt(points[i].point.y / chunkSize), Mathf.RoundToInt(points[i].point.z / chunkSize));
+
+            if (!chunkedPositions.ContainsKey(index))
+            {
+                lock (Thread.CurrentContext)
+                    chunkedPositions[index] = new List<CloudPoint>();
+            }
+
+            if (!chunkedPositions[index].Contains(points[i]))
+            {
+                lock (Thread.CurrentContext)
+                    chunkedPositions[index].Add(points[i]);
+            }
+
+            if (destroyed)
+            {
+                loopState.Stop();
+                return;
+            }
+        });
+
+        Debug.Log("Finish one of processes.");
+
+        finishProcess?.Invoke(this, new FinishProcessArgs(chunkedPositions));
     }
 
     private void OnDestroy()
