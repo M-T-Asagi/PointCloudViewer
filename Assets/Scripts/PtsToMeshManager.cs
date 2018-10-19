@@ -16,22 +16,34 @@ public class PtsToMeshManager : MonoBehaviour
     [SerializeField]
     ProgressBarManager pbManager;
 
+    GameObject meshesRoot;
+    Mesh[] meshes;
+
     bool allProcessIsUp = false;
 
     // Use this for initialization
     void Start()
     {
         converter.SetupPointScaning(filePath);
-        baker.SetUp();
+
+        meshesRoot = new GameObject();
+        meshesRoot.transform.parent = transform;
+        baker.SetUp(meshesRoot.transform);
+
+        meshes = new Mesh[converter.TotalSectionCount];
 
         converter.processUp += ProcessUp;
         converter.allProcessUp += AllProcessUp;
+        baker.finishGenerate += FinishGenerateMeshes;
+        baker.finishBaking += FinishBakingMeshes;
+
+        CallConverterProcess();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (converter.TotalPointCount >= 0)
+        if (!allProcessIsUp && converter.TotalPointCount >= 0)
         {
             pbManager.UpdateState((float)converter.ProcessedPointCount / (float)converter.TotalPointCount);
             pbManager.UpdateStateText(converter.ProcessedPointCount + " /\n" + converter.TotalPointCount);
@@ -50,17 +62,20 @@ public class PtsToMeshManager : MonoBehaviour
 
     void FinishGenerateMeshes(object sender, MeshBaker.FinishGenerateArgs args)
     {
+        meshes[converter.ProcessedSectionCount] = args.mesh;
         baker.SetMeshToBake(args.mesh);
     }
 
     void FinishBakingMeshes(object sender, MeshBaker.FinishBakingArgs args)
     {
-        saver.
+        CallConverterProcess();
     }
 
     void AllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
     {
-        allProcessIsUp = true;
         pbManager.Finish();
+        saver.Process(meshes, meshesRoot);
+
+        allProcessIsUp = true;
     }
 }
