@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class CollectingPoints : MonoBehaviour
+public class CollectingPointsManager : MonoBehaviour
 {
     [SerializeField]
     float cubeSize = 0.1f;
@@ -21,6 +20,10 @@ public class CollectingPoints : MonoBehaviour
     MeshSaver saver;
     [SerializeField]
     ProgressBarManager pbManager;
+    [SerializeField]
+    ObjectActiveManager subPBManagerActiveManager;
+    [SerializeField]
+    ProgressBarManager subpbManager;
 
     GameObject meshesRoot;
     Dictionary<IndexedVector3, Color> collectedPoints;
@@ -28,6 +31,9 @@ public class CollectingPoints : MonoBehaviour
 
     bool allProcessIsUp = false;
     bool destroyed = false;
+
+    int subCount = 0;
+    int subAll = 0;
 
     // Use this for initialization
     void Start()
@@ -64,9 +70,14 @@ public class CollectingPoints : MonoBehaviour
 
     async void CallCollecting(CloudPoint[] _points)
     {
-        CloudPoint[] points = new CloudPoint[_points.Length];
-        Array.Copy(_points, points, _points.Length);
+        CloudPoint[] points = (CloudPoint[])_points.Clone();
+
+        subPBManagerActiveManager.Active = true;
+        subCount = 0;
+        subAll = points.Length;
+
         await Task.Run(() => Collecting(points));
+        subPBManagerActiveManager.Active = false;
         CallConverterProcess();
     }
 
@@ -74,16 +85,28 @@ public class CollectingPoints : MonoBehaviour
     {
         Parallel.For(0, points.Length, options, (i, loopState) =>
         {
-            IndexedVector3 newIndex = new IndexedVector3(
-                Mathf.RoundToInt(points[i].point.x / cubeSize),
-                Mathf.RoundToInt(points[i].point.y / cubeSize),
-                Mathf.RoundToInt(points[i].point.z / cubeSize)
-                );
-
-            if (!collectedPoints.ContainsKey(newIndex))
+            try
             {
+                IndexedVector3 newIndex = new IndexedVector3(
+                    Mathf.RoundToInt(points[i].point.x / cubeSize),
+                    Mathf.RoundToInt(points[i].point.y / cubeSize),
+                    Mathf.RoundToInt(points[i].point.z / cubeSize)
+                    );
+
+                if (!collectedPoints.ContainsKey(newIndex))
+                {
+                    lock (Thread.CurrentContext)
+                        collectedPoints.Add(newIndex, points[i].color);
+                }
+
                 lock (Thread.CurrentContext)
-                    collectedPoints.Add(newIndex, points[i].color);
+                    subCount++;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                Debug.LogException(e);
+                Debug.LogError("Dead!!!!!!!!!!!!!");
             }
 
             if (destroyed)
@@ -101,16 +124,53 @@ public class CollectingPoints : MonoBehaviour
 
     void CallArranging()
     {
-        CloudPoint[] points = new CloudPoint[collectedPoints.Count];
-        int count = 0;
+        Debug.Log("Called!!!");
+        ConvertCollectedPointToCloudPoint();
+    }
 
-        foreach (KeyValuePair<IndexedVector3, Color> point in collectedPoints)
+    async void ConvertCollectedPointToCloudPoint()
+    {
+        subPBManagerActiveManager.Active = true;
+        List<CloudPoint> t = await Task.Run(() => ConvertingCollectedPointToCloudPointProcess());
+        subPBManagerActiveManager.Active = false;
+        arranger.Process(t.ToArray());
+    }
+
+    Task<List<CloudPoint>> ConvertingCollectedPointToCloudPointProcess()
+    {
+        Debug.Log("nonononononono");
+        return new Task<List<CloudPoint>>(() => _ConvertingCollectedPointToCloudPointProcess());
+    }
+
+    List<CloudPoint> _ConvertingCollectedPointToCloudPointProcess()
+    {
+        Debug.Log("apoapoapoapoapoapoa");
+        List<CloudPoint> points = new List<CloudPoint>();
+        subCount = 0;
+        subAll = collectedPoints.Count;
+        Parallel.ForEach(collectedPoints, options, (point, loopState) =>
         {
-            points[count] = new CloudPoint(point.Key.ToVector3(), 1, point.Value);
-            count++;
-        }
+            try
+            {
+                lock (Thread.CurrentContext)
+                    points.Add(new CloudPoint(point.Key.ToVector3(), 1, point.Value));
+                subCount++;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                Debug.LogException(e);
+                Debug.LogError("Dead!!!!!!!!!!!!!");
+            }
 
-        arranger.Process(points);
+
+            if (destroyed)
+            {
+                loopState.Stop();
+                return;
+            }
+        });
+        return points;
     }
 
     void ArrangingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
@@ -149,6 +209,11 @@ public class CollectingPoints : MonoBehaviour
         {
             pbManager.UpdateState((float)converter.ProcessedPointCount / (float)converter.TotalPointCount);
             pbManager.UpdateStateText(converter.ProcessedPointCount + " /\n" + converter.TotalPointCount);
+        }
+        if (subPBManagerActiveManager.Active)
+        {
+            subpbManager.UpdateState((float)subCount / (float)subAll);
+            subpbManager.UpdateStateText(subCount + "/\n" + subAll);
         }
     }
 
