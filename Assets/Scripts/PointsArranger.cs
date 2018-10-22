@@ -18,6 +18,7 @@ public class PointsArranger : MonoBehaviour
 
     [SerializeField]
     float chunkSize = 10f;
+    public float ChunkSize { get { return chunkSize; } }
 
     public EventHandler<FinishProcessArgs> finishProcess;
 
@@ -105,7 +106,7 @@ public class PointsArranger : MonoBehaviour
             if (!chunkedPositions[index].Contains(points[i]))
             {
                 lock (Thread.CurrentContext)
-                    chunkedPositions[index].Add(points[i]);
+                    chunkedPositions[index].Add(new CloudPoint(points[i].point - (index.ToVector3() * chunkSize), 1, points[i].color));
             }
 
             if (destroyed)
