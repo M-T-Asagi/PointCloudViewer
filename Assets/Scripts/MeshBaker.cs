@@ -158,7 +158,6 @@ public class MeshBaker : MonoBehaviour
         }
 
         finishGenerate?.Invoke(this, new FinishGenerateArgs(centers, meshes));
-
         Cleanup();
     }
 
