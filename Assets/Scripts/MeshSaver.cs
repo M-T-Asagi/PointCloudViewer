@@ -25,6 +25,18 @@ public class MeshSaver : MonoBehaviour
         Setup();
     }
 
+    public void Process(GameObject objectRoot)
+    {
+        int childCount = objectRoot.transform.childCount;
+        targetMeshes = new Mesh[childCount];
+        for (int i = 0; i < childCount; i++)
+        {
+            targetMeshes[i] = objectRoot.transform.GetChild(i).gameObject.GetComponent<MeshFilter>().mesh;
+        }
+        prefabRoot = objectRoot;
+        Setup();
+    }
+
     void Setup()
     {
         if (!AssetDatabase.IsValidFolder("Assets/Resources"))
