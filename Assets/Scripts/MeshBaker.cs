@@ -92,16 +92,17 @@ public class MeshBaker : MonoBehaviour
     public void SetPoints(CloudPoint[] _points, Vector3? _center = null)
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
-        GenerateMeshStuffs(points, _center.HasValue ? _center.Value : Vector3.zero);
+        List<Vector3> _centers = new List<Vector3>() { _center.HasValue ? _center.Value : Vector3.zero };
+        GenerateMeshStuffs(points, _centers);
     }
 
-    public void SetPoints(List<CloudPoint[]> _points, Vector3? _center = null)
+    public void SetPoints(List<CloudPoint[]> _points, List<Vector3> _centers = null)
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>(_points);
-        GenerateMeshStuffs(points, _center.HasValue ? _center.Value : Vector3.zero);
+        GenerateMeshStuffs(points, _centers);
     }
 
-    async void GenerateMeshStuffs(List<CloudPoint[]> points, Vector3 center)
+    async void GenerateMeshStuffs(List<CloudPoint[]> points, List<Vector3> centers)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
@@ -123,7 +124,7 @@ public class MeshBaker : MonoBehaviour
                 }
 
                 lock (Thread.CurrentContext)
-                    meshStuffs.Add(new MeshStuff(center, _vertices, _colors, _indeces));
+                    meshStuffs.Add(new MeshStuff(centers[i], _vertices, _colors, _indeces));
 
                 if (destroyed)
                 {
