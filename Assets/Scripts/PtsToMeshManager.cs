@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 public class PtsToMeshManager : MonoBehaviour
 {
@@ -30,6 +27,7 @@ public class PtsToMeshManager : MonoBehaviour
         meshesRoot.transform.parent = transform;
         baker.SetUp(meshesRoot.transform);
 
+        Debug.Log("Converter totatlSectionCount : " + converter.TotalSectionCount);
         meshes = new Mesh[converter.TotalSectionCount];
 
         converter.processUp += ProcessUp;
@@ -62,7 +60,8 @@ public class PtsToMeshManager : MonoBehaviour
 
     void FinishGenerateMeshes(object sender, MeshBaker.FinishGenerateArgs args)
     {
-        meshes[converter.ProcessedSectionCount] = args.meshes[0];
+        Debug.Log("FinishGenerateMeshes + Processed count : " + converter.ProcessedSectionCount);
+        meshes[converter.ProcessedSectionCount - 1] = args.meshes[0];
         baker.SetMeshToBake(args.centers, args.meshes);
     }
 
