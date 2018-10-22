@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class ProgressBarManager : MonoBehaviour
@@ -10,21 +8,41 @@ public class ProgressBarManager : MonoBehaviour
     Image baseBar;
     [SerializeField]
     Image progressingBar;
+    [SerializeField]
+    Text stateText;
 
     [SerializeField]
     float state = 0;
     public float State { get { return state; } }
 
-    Text stateText;
     RectTransform rTransform;
     float max;
+    float height;
+    string stateTextsText = "";
 
     // Use this for initialization
     void Start()
     {
         rTransform = progressingBar.rectTransform;
         max = baseBar.rectTransform.sizeDelta.x;
-        stateText = transform.Find("StateText").GetComponent<Text>();
+        height = baseBar.rectTransform.sizeDelta.y;
+        Debug.Log(baseBar.rectTransform.sizeDelta);
+        _UpdateState();
+        rTransform.anchoredPosition = new Vector3(-baseBar.rectTransform.sizeDelta.x, -baseBar.rectTransform.sizeDelta.y, 0);
+    }
+
+    private void Update()
+    {
+        _UpdateState();
+    }
+
+    void _UpdateState()
+    {
+        Vector2 sizeDelta = rTransform.sizeDelta;
+        sizeDelta.x = max * state;
+        sizeDelta.y = height;
+        rTransform.sizeDelta = sizeDelta;
+        stateText.text = stateTextsText;
     }
 
     public void UpdateState(float _state)
@@ -34,15 +52,11 @@ public class ProgressBarManager : MonoBehaviour
             state = 0;
         else if (state > 1)
             state = 1;
-
-        Vector2 sizeDelta = rTransform.sizeDelta;
-        sizeDelta.x = max * state;
-        rTransform.sizeDelta = sizeDelta;
     }
 
     public void UpdateStateText(string text)
     {
-        stateText.text = text;
+        stateTextsText = text;
     }
 
     public void Finish()
