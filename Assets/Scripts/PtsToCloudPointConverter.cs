@@ -76,7 +76,6 @@ public class PtsToCloudPointConverter : MonoBehaviour
     async void CallSetPoint()
     {
         await Task.Run(() => SetPointsAsync());
-        processedSectionCount++;
 
         Debug.Log("Setting points process is finished!");
         Debug.Log("Processed count : " + processedSectionCount);
@@ -145,6 +144,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
 
         Debug.Log("process up! : " + currentCount + "/" + points.Length);
         processUp?.Invoke(this, new ProcessUpArgs(points));
+        processedSectionCount++;
     }
 
     void Cleanup()
