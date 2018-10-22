@@ -62,8 +62,8 @@ public class PtsToMeshManager : MonoBehaviour
 
     void FinishGenerateMeshes(object sender, MeshBaker.FinishGenerateArgs args)
     {
-        meshes[converter.ProcessedSectionCount] = args.mesh;
-        baker.SetMeshToBake(args.mesh);
+        meshes[converter.ProcessedSectionCount] = args.meshes[0];
+        baker.SetMeshToBake(args.centers, args.meshes);
     }
 
     void FinishBakingMeshes(object sender, MeshBaker.FinishBakingArgs args)
