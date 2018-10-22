@@ -1,20 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public class MeshBaker : MonoBehaviour
 {
+    public class MeshStuff
+    {
+        public Vector3[] vertices;
+        public Color[] colors;
+        public int[] indeces;
+
+        public MeshStuff(Vector3[] _vertices, Color[] _colors, int[] _indeces)
+        {
+            vertices = (Vector3[])_vertices.Clone();
+            colors = (Color[])_colors.Clone();
+            indeces = (int[])_indeces.Clone();
+        }
+    }
+
     public class FinishBakingArgs : EventArgs
     {
     }
 
     public class FinishGenerateArgs : EventArgs
     {
-        public Mesh mesh;
+        public Mesh[] meshes;
 
-        public FinishGenerateArgs(Mesh _mesh)
+        public FinishGenerateArgs(Mesh[] _meshes)
         {
-            mesh = _mesh;
+            meshes = new Mesh[_meshes.Length];
+            Array.Copy(_meshes, meshes, _meshes.Length);
         }
     }
 
@@ -24,19 +41,18 @@ public class MeshBaker : MonoBehaviour
     [SerializeField]
     bool recenter = true;
 
-    Vector3[] verticesBuff;
-    Color[] colorsBuff;
-    int[] indecesBuff;
+    List<MeshStuff> meshStuffs;
 
     bool generate = false;
     bool bake = false;
+    bool destroyed = false;
 
     Vector3? center = null;
 
     ParallelOptions options;
     Transform meshesRoot = null;
 
-    Mesh meshBuff;
+    Mesh[] meshesBuff;
 
     public EventHandler<FinishBakingArgs> finishBaking;
     public EventHandler<FinishGenerateArgs> finishGenerate;
@@ -73,80 +89,101 @@ public class MeshBaker : MonoBehaviour
 
     public void SetPoints(CloudPoint[] _points)
     {
-        CloudPoint[] points = new CloudPoint[_points.Length];
-        Array.Copy(_points, points, _points.Length);
+        List<CloudPoint[]> points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
         GenerateMeshStuffs(points);
-
-        generate = true;
     }
 
-    async void GenerateMeshStuffs(CloudPoint[] points)
+    public void SetPoints(List<CloudPoint[]> _points)
+    {
+        List<CloudPoint[]> points = new List<CloudPoint[]>(_points);
+        GenerateMeshStuffs(points);
+    }
+
+    async void GenerateMeshStuffs(List<CloudPoint[]> points)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
         {
-            int _pointCount = points.Length;
+            meshStuffs = new List<MeshStuff>();
 
-            verticesBuff = new Vector3[_pointCount];
-            colorsBuff = new Color[_pointCount];
-            indecesBuff = new int[_pointCount];
-
-            for (int i = 0; i < _pointCount; i++)
+            Parallel.For(0, points.Count, options, (i, loopState) =>
             {
-                verticesBuff[i] = points[i].point;
-                colorsBuff[i] = points[i].color;
-                indecesBuff[i] = i;
+                int pointCount = points[i].Length;
+                Vector3[] _vertices = new Vector3[pointCount];
+                Color[] _colors = new Color[pointCount];
+                int[] _indeces = new int[pointCount];
 
-                if (center == null)
-                    center = points[i].point;
-                else
-                    center = (points[i].point + center) / 2f;
-            }
+                for (int k = 0; k < pointCount; k++)
+                {
+                    _vertices[k] = points[i][k].point;
+                    _colors[k] = points[i][k].color;
+                    _indeces[k] = k;
+
+
+
+                }
+                lock (Thread.CurrentContext)
+                    meshStuffs.Add(new MeshStuff(_vertices, _colors, _indeces));
+
+                if (destroyed)
+                {
+                    loopState.Stop();
+                    return;
+                }
+            });
         });
+        generate = true;
     }
 
     void GenerateMeshes()
     {
         Debug.Log("creating child objects start!");
-        Mesh mesh = new Mesh();
-        mesh.vertices = verticesBuff;
-        mesh.colors = colorsBuff;
-        mesh.SetIndices(indecesBuff, MeshTopology.Points, 0);
 
-        finishGenerate?.Invoke(this, new FinishGenerateArgs(mesh));
+        Mesh[] meshes = new Mesh[meshStuffs.Count];
+        for (int i = 0; i < meshes.Length; i++)
+        {
+            Mesh mesh = new Mesh();
+            mesh.vertices = meshStuffs[i].vertices;
+            mesh.colors = meshStuffs[i].colors;
+            mesh.SetIndices(meshStuffs[i].indeces, MeshTopology.Points, 0);
+            meshes[i] = mesh;
+        }
+        finishGenerate?.Invoke(this, new FinishGenerateArgs(meshes));
 
         Cleanup();
     }
 
-    public void SetMeshToBake(Mesh mesh)
+    public void SetMeshToBake(Mesh[] meshes)
     {
-        meshBuff = mesh;
+        meshesBuff = (Mesh[])meshes.Clone();
         bake = true;
     }
 
     private void BakingMeshToNewObject()
     {
-        GameObject child;
-        if (meshesRoot)
-            child = Instantiate(prefab, meshesRoot);
-        else
-            child = Instantiate(prefab);
+        for (int i = 0; i < meshesBuff.Length; i++)
+        {
+            GameObject child;
+            if (meshesRoot)
+                child = Instantiate(prefab, meshesRoot);
+            else
+                child = Instantiate(prefab);
 
-        child.GetComponent<MeshFilter>().sharedMesh = meshBuff;
+            child.GetComponent<MeshFilter>().sharedMesh = meshesBuff[i];
+        }
 
-        meshBuff = null;
+        meshesBuff = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
     }
 
     private void OnDestroy()
     {
+        destroyed = true;
         Cleanup();
     }
 
     void Cleanup()
     {
-        verticesBuff = null;
-        colorsBuff = null;
-        indecesBuff = null;
+        meshStuffs = null;
     }
 }
