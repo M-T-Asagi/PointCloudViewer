@@ -8,12 +8,14 @@ public class MeshBaker : MonoBehaviour
 {
     public class MeshStuff
     {
+        public Vector3 center;
         public Vector3[] vertices;
         public Color[] colors;
         public int[] indeces;
 
-        public MeshStuff(Vector3[] _vertices, Color[] _colors, int[] _indeces)
+        public MeshStuff(Vector3 _center, Vector3[] _vertices, Color[] _colors, int[] _indeces)
         {
+            center = _center;
             vertices = (Vector3[])_vertices.Clone();
             colors = (Color[])_colors.Clone();
             indeces = (int[])_indeces.Clone();
@@ -26,12 +28,13 @@ public class MeshBaker : MonoBehaviour
 
     public class FinishGenerateArgs : EventArgs
     {
+        public Vector3[] centers;
         public Mesh[] meshes;
 
-        public FinishGenerateArgs(Mesh[] _meshes)
+        public FinishGenerateArgs(Vector3[] _centers, Mesh[] _meshes)
         {
-            meshes = new Mesh[_meshes.Length];
-            Array.Copy(_meshes, meshes, _meshes.Length);
+            centers = (Vector3[])_centers.Clone();
+            meshes = (Mesh[])_meshes.Clone();
         }
     }
 
@@ -53,6 +56,7 @@ public class MeshBaker : MonoBehaviour
     Transform meshesRoot = null;
 
     Mesh[] meshesBuff;
+    Vector3[] meshesCenter;
 
     public EventHandler<FinishBakingArgs> finishBaking;
     public EventHandler<FinishGenerateArgs> finishGenerate;
@@ -70,8 +74,6 @@ public class MeshBaker : MonoBehaviour
             BakingMeshToNewObject();
             bake = false;
         }
-        if (recenter && center.HasValue)
-            meshesRoot.position = -center.Value;
     }
 
     public void SetUp(Transform _root = null)
@@ -87,19 +89,19 @@ public class MeshBaker : MonoBehaviour
         options.MaxDegreeOfParallelism = 4;
     }
 
-    public void SetPoints(CloudPoint[] _points)
+    public void SetPoints(CloudPoint[] _points, Vector3? _center = null)
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
-        GenerateMeshStuffs(points);
+        GenerateMeshStuffs(points, _center.HasValue ? _center.Value : Vector3.zero);
     }
 
-    public void SetPoints(List<CloudPoint[]> _points)
+    public void SetPoints(List<CloudPoint[]> _points, Vector3? _center = null)
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>(_points);
-        GenerateMeshStuffs(points);
+        GenerateMeshStuffs(points, _center.HasValue ? _center.Value : Vector3.zero);
     }
 
-    async void GenerateMeshStuffs(List<CloudPoint[]> points)
+    async void GenerateMeshStuffs(List<CloudPoint[]> points, Vector3 center)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
@@ -118,12 +120,10 @@ public class MeshBaker : MonoBehaviour
                     _vertices[k] = points[i][k].point;
                     _colors[k] = points[i][k].color;
                     _indeces[k] = k;
-
-
-
                 }
+
                 lock (Thread.CurrentContext)
-                    meshStuffs.Add(new MeshStuff(_vertices, _colors, _indeces));
+                    meshStuffs.Add(new MeshStuff(center, _vertices, _colors, _indeces));
 
                 if (destroyed)
                 {
@@ -139,6 +139,7 @@ public class MeshBaker : MonoBehaviour
     {
         Debug.Log("creating child objects start!");
 
+        Vector3[] centers = new Vector3[meshStuffs.Count];
         Mesh[] meshes = new Mesh[meshStuffs.Count];
         for (int i = 0; i < meshes.Length; i++)
         {
@@ -147,15 +148,23 @@ public class MeshBaker : MonoBehaviour
             mesh.colors = meshStuffs[i].colors;
             mesh.SetIndices(meshStuffs[i].indeces, MeshTopology.Points, 0);
             meshes[i] = mesh;
+
+            centers[i] = meshStuffs[i].center;
+            if (center.HasValue)
+                center = (center + centers[i]) / 2f;
+            else
+                center = centers[i];
         }
-        finishGenerate?.Invoke(this, new FinishGenerateArgs(meshes));
+
+        finishGenerate?.Invoke(this, new FinishGenerateArgs(centers, meshes));
 
         Cleanup();
     }
 
-    public void SetMeshToBake(Mesh[] meshes)
+    public void SetMeshToBake(Vector3[] centers, Mesh[] meshes)
     {
         meshesBuff = (Mesh[])meshes.Clone();
+        meshesCenter = (Vector3[])centers.Clone();
         bake = true;
     }
 
@@ -165,12 +174,20 @@ public class MeshBaker : MonoBehaviour
         {
             GameObject child;
             if (meshesRoot)
+            {
                 child = Instantiate(prefab, meshesRoot);
+                child.transform.localPosition = meshesCenter[i];
+            }
             else
+            {
                 child = Instantiate(prefab);
+                child.transform.position = meshesCenter[i];
+            }
 
             child.GetComponent<MeshFilter>().sharedMesh = meshesBuff[i];
         }
+
+        meshesRoot.position = -center.Value;
 
         meshesBuff = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
