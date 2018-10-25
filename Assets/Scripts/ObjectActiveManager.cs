@@ -11,22 +11,18 @@ public class ObjectActiveManager : MonoBehaviour
 
     public bool Active { get { return active; } set { active = value; } }
 
-    bool lastState;
-
     // Use this for initialization
     void Start()
     {
-        lastState = active;
         target.SetActive(active);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (lastState != active)
+        if (target.activeSelf != active)
         {
             target.SetActive(active);
-            lastState = active;
         }
     }
 }

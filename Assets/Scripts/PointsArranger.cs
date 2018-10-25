@@ -22,6 +22,9 @@ public class PointsArranger : MonoBehaviour
 
     public EventHandler<FinishProcessArgs> finishProcess;
 
+    public int ProcessedPointCount { get; private set; }
+    public int AllPointCount { get; private set; }
+
     Dictionary<IndexedVector3, List<CloudPoint>> chunkedPositions;
     ParallelOptions options;
 
@@ -32,6 +35,7 @@ public class PointsArranger : MonoBehaviour
     {
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = 4;
+        chunkedPositions = new Dictionary<IndexedVector3, List<CloudPoint>>();
     }
 
     public void Setup(GameObject parentObject)
@@ -85,6 +89,8 @@ public class PointsArranger : MonoBehaviour
 
     async void SetPoints(CloudPoint[] points)
     {
+        AllPointCount = points.Length;
+        ProcessedPointCount = 0;
         await Task.Run(() => SetPointsAsync(points));
     }
 
@@ -94,19 +100,31 @@ public class PointsArranger : MonoBehaviour
 
         Parallel.For(0, points.Length, options, (i, loopState) =>
         {
-            IndexedVector3 index = new IndexedVector3(
-                Mathf.RoundToInt(points[i].point.x / chunkSize), Mathf.RoundToInt(points[i].point.y / chunkSize), Mathf.RoundToInt(points[i].point.z / chunkSize));
-
-            if (!chunkedPositions.ContainsKey(index))
+            try
             {
+                IndexedVector3 index = new IndexedVector3(
+                    Mathf.RoundToInt(points[i].point.x / chunkSize), Mathf.RoundToInt(points[i].point.y / chunkSize), Mathf.RoundToInt(points[i].point.z / chunkSize));
+
+                if (!chunkedPositions.ContainsKey(index))
+                {
+                    lock (Thread.CurrentContext)
+                        chunkedPositions[index] = new List<CloudPoint>();
+                }
+
+                if (!chunkedPositions[index].Contains(points[i]))
+                {
+                    lock (Thread.CurrentContext)
+                        chunkedPositions[index].Add(new CloudPoint(points[i].point - (index.ToVector3() * chunkSize), 1, points[i].color));
+                }
+
                 lock (Thread.CurrentContext)
-                    chunkedPositions[index] = new List<CloudPoint>();
+                    ProcessedPointCount++;
             }
-
-            if (!chunkedPositions[index].Contains(points[i]))
+            catch (Exception e)
             {
-                lock (Thread.CurrentContext)
-                    chunkedPositions[index].Add(new CloudPoint(points[i].point - (index.ToVector3() * chunkSize), 1, points[i].color));
+                Debug.LogError(e);
+                Debug.LogException(e);
+                Debug.LogError("Arrangin points process is Dead!!!!!!!!!!!!!");
             }
 
             if (destroyed)

@@ -3,9 +3,24 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CollectingPointsManager : MonoBehaviour
 {
+    public enum State
+    {
+        Settings = 0,
+        Converting,
+        Collecting,
+        Bundling,
+        Arranging,
+        Generating,
+        Baking,
+        Saving,
+
+        ItemNum
+    }
+
     [SerializeField]
     float cubeSize = 0.1f;
     [SerializeField]
@@ -21,13 +36,20 @@ public class CollectingPointsManager : MonoBehaviour
     [SerializeField]
     ProgressBarManager pbManager;
     [SerializeField]
-    ObjectActiveManager subPBManagerActiveManager;
+    ObjectActiveManager pbManagerActiveManager;
     [SerializeField]
     ProgressBarManager subpbManager;
+    [SerializeField]
+    ObjectActiveManager subPBManagerActiveManager;
+    [SerializeField]
+    Text stateText;
+
 
     GameObject meshesRoot;
     Dictionary<IndexedVector3, Color> collectedPoints;
     ParallelOptions options;
+
+    State stateNow = 0;
 
     bool allProcessIsUp = false;
     bool destroyed = false;
@@ -61,6 +83,7 @@ public class CollectingPointsManager : MonoBehaviour
     void CallConverterProcess()
     {
         converter.Process();
+        stateNow = State.Converting;
     }
 
     void ProcessUp(object sender, PtsToCloudPointConverter.ProcessUpArgs args)
@@ -72,12 +95,12 @@ public class CollectingPointsManager : MonoBehaviour
     {
         CloudPoint[] points = (CloudPoint[])_points.Clone();
 
-        subPBManagerActiveManager.Active = true;
         subCount = 0;
         subAll = points.Length;
 
+        stateNow = State.Collecting;
+
         await Task.Run(() => Collecting(points));
-        subPBManagerActiveManager.Active = false;
         CallConverterProcess();
     }
 
@@ -106,7 +129,7 @@ public class CollectingPointsManager : MonoBehaviour
             {
                 Debug.LogError(e);
                 Debug.LogException(e);
-                Debug.LogError("Dead!!!!!!!!!!!!!");
+                Debug.LogError("Collecting process is Dead!!!!!!!!!!!!!");
             }
 
             if (destroyed)
@@ -119,32 +142,19 @@ public class CollectingPointsManager : MonoBehaviour
 
     void AllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
     {
-        CallArranging();
+        CallBundlingPoints();
     }
 
-    void CallArranging()
+    async void CallBundlingPoints()
     {
-        Debug.Log("Called!!!");
-        ConvertCollectedPointToCloudPoint();
+        stateNow = State.Bundling;
+
+        List<CloudPoint> t = await Task.Run(() => BundlingPoints());
+        CallArrange(t.ToArray());
     }
 
-    async void ConvertCollectedPointToCloudPoint()
+    List<CloudPoint> BundlingPoints()
     {
-        subPBManagerActiveManager.Active = true;
-        List<CloudPoint> t = await Task.Run(() => ConvertingCollectedPointToCloudPointProcess());
-        subPBManagerActiveManager.Active = false;
-        arranger.Process(t.ToArray());
-    }
-
-    Task<List<CloudPoint>> ConvertingCollectedPointToCloudPointProcess()
-    {
-        Debug.Log("nonononononono");
-        return new Task<List<CloudPoint>>(() => _ConvertingCollectedPointToCloudPointProcess());
-    }
-
-    List<CloudPoint> _ConvertingCollectedPointToCloudPointProcess()
-    {
-        Debug.Log("apoapoapoapoapoapoa");
         List<CloudPoint> points = new List<CloudPoint>();
         subCount = 0;
         subAll = collectedPoints.Count;
@@ -154,15 +164,15 @@ public class CollectingPointsManager : MonoBehaviour
             {
                 lock (Thread.CurrentContext)
                     points.Add(new CloudPoint(point.Key.ToVector3(), 1, point.Value));
-                subCount++;
+                lock (Thread.CurrentContext)
+                    subCount++;
             }
             catch (Exception e)
             {
                 Debug.LogError(e);
                 Debug.LogException(e);
-                Debug.LogError("Dead!!!!!!!!!!!!!");
+                Debug.LogError("Bundling points process is Dead!!!!!!!!!!!!!");
             }
-
 
             if (destroyed)
             {
@@ -171,6 +181,13 @@ public class CollectingPointsManager : MonoBehaviour
             }
         });
         return points;
+    }
+
+    void CallArrange(CloudPoint[] _points)
+    {
+        stateNow = State.Arranging;
+        CloudPoint[] points = (CloudPoint[])_points.Clone();
+        arranger.Process(points);
     }
 
     void ArrangingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
@@ -183,17 +200,24 @@ public class CollectingPointsManager : MonoBehaviour
             centers.Add(val.Key.ToVector3() * arranger.ChunkSize);
             points.Add(_points);
         }
+        CallBakerSetPoints(points, centers);
+    }
 
+    void CallBakerSetPoints(List<CloudPoint[]> points, List<Vector3> centers)
+    {
+        stateNow = State.Generating;
         baker.SetPoints(points, centers);
     }
 
     void MeshesGenerated(object sender, MeshBaker.FinishGenerateArgs args)
     {
+        stateNow = State.Baking;
         baker.SetMeshToBake(args.centers, args.meshes);
     }
 
     void MeshesBaked(object sender, MeshBaker.FinishBakingArgs args)
     {
+        stateNow = State.Saving;
         saver.Process(meshesRoot);
     }
 
@@ -205,15 +229,48 @@ public class CollectingPointsManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!allProcessIsUp && converter.TotalPointCount >= 0 && pbManager != null)
+        stateText.text = "State now:\n    " + stateNow.ToString();
+        UpdateMainProgressBar();
+        UpdateSubProgressbar();
+    }
+
+    void UpdateMainProgressBar()
+    {
+        pbManagerActiveManager.Active = true;
+        switch (stateNow)
         {
-            pbManager.UpdateState((float)converter.ProcessedPointCount / (float)converter.TotalPointCount);
-            pbManager.UpdateStateText(converter.ProcessedPointCount + " /\n" + converter.TotalPointCount);
+            case State.Converting:
+                pbManager.UpdateState((float)converter.ProcessedPointCount / (float)converter.TotalPointCount);
+                pbManager.UpdateStateText(converter.ProcessedPointCount + " /\n" + converter.TotalPointCount);
+                break;
+            case State.Collecting:
+                break;
+            case State.Bundling:
+                pbManager.UpdateState((float)subCount / (float)subAll);
+                pbManager.UpdateStateText(subCount + " /\n" + subAll);
+                break;
+            case State.Arranging:
+                pbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
+                pbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
+                break;
+            default:
+                pbManagerActiveManager.Active = false;
+                break;
         }
-        if (subPBManagerActiveManager.Active)
+    }
+
+    void UpdateSubProgressbar()
+    {
+        subPBManagerActiveManager.Active = true;
+        switch (stateNow)
         {
-            subpbManager.UpdateState((float)subCount / (float)subAll);
-            subpbManager.UpdateStateText(subCount + "/\n" + subAll);
+            case State.Collecting:
+                subpbManager.UpdateState((float)subCount / (float)subAll);
+                subpbManager.UpdateStateText(subCount + "/\n" + subAll);
+                break;
+            default:
+                subPBManagerActiveManager.Active = false;
+                break;
         }
     }
 
