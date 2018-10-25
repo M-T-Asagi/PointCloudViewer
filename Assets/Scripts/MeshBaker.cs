@@ -187,7 +187,8 @@ public class MeshBaker : MonoBehaviour
             child.GetComponent<MeshFilter>().sharedMesh = meshesBuff[i];
         }
 
-        meshesRoot.position = -center.Value;
+        if (center.HasValue)
+            meshesRoot.position = -center.Value;
 
         meshesBuff = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
