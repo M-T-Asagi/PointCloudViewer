@@ -238,6 +238,8 @@ GameObject:
   - component: {fileID: 200755975}
   - component: {fileID: 200755974}
   - component: {fileID: 200755977}
+  - component: {fileID: 200755979}
+  - component: {fileID: 200755978}
   m_Layer: 0
   m_Name: Arranging
   m_TagString: Untagged
@@ -256,7 +258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cbcea31f4a07a04d804f797fa11162c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkSize: 10
+  chunkSize: 50
 --- !u!4 &200755972
 Transform:
   m_ObjectHideFlags: 0
@@ -294,7 +296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sizeScale: 0.0001
-  maxPointsNumInAnObject: 500000
+  maxPointsNumInAnObject: 1000000
 --- !u!114 &200755975
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -319,7 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7ce7c0afecc4c94d88728143c550dbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeSize: 0.1
+  cubeSize: 0.01
   filePath: D:\Unity\PointCloudViewing\Assets\Resources\PTS\DG_30mm.txt
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
@@ -327,9 +329,9 @@ MonoBehaviour:
   saver: {fileID: 200755973}
   cuber: {fileID: 200755977}
   pbManager: {fileID: 156344209}
-  pbManagerActiveManager: {fileID: 1216097241}
+  pbManagerActiveManager: {fileID: 200755978}
   subpbManager: {fileID: 1162218788}
-  subPBManagerActiveManager: {fileID: 1162218789}
+  subPBManagerActiveManager: {fileID: 200755979}
   stateText: {fileID: 581163063}
 --- !u!114 &200755977
 MonoBehaviour:
@@ -343,6 +345,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &200755978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 200755970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1216097240}
+  active: 1
+--- !u!114 &200755979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 200755970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1162218787}
+  active: 1
 --- !u!1 &421666754
 GameObject:
   m_ObjectHideFlags: 0
@@ -697,37 +725,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1162218786}
   m_Script: {fileID: 11500000, guid: 867e956781db60b43b5b7d642bc7e375, type: 3}
---- !u!114 &1162218789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1162218787}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 1162218787}
-  active: 1
 --- !u!1 &1216097240 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1687663097546696, guid: 2573d2d26f924ce4b9a48c9bc87f4e94,
     type: 2}
   m_PrefabInternal: {fileID: 156344208}
---- !u!114 &1216097241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1216097240}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 1216097240}
-  active: 1
 --- !u!1 &1787412676
 GameObject:
   m_ObjectHideFlags: 0

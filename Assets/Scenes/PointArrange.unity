@@ -237,6 +237,8 @@ GameObject:
   - component: {fileID: 200755973}
   - component: {fileID: 200755975}
   - component: {fileID: 200755974}
+  - component: {fileID: 200755978}
+  - component: {fileID: 200755977}
   m_Layer: 0
   m_Name: Arranging
   m_TagString: Untagged
@@ -255,7 +257,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cbcea31f4a07a04d804f797fa11162c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkSize: 10
+  chunkSize: 50
 --- !u!4 &200755972
 Transform:
   m_ObjectHideFlags: 0
@@ -318,17 +320,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a477d50e3ad3be48bf8498d125a2c21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeSize: 0.1
+  cubeSize: 0.01
   filePath: Assets/Resources/PTS/DG_30mm.txt
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
   baker: {fileID: 200755975}
   saver: {fileID: 200755973}
   pbManager: {fileID: 156344209}
-  pbManagerActiveManager: {fileID: 1216097241}
+  pbManagerActiveManager: {fileID: 200755978}
   subpbManager: {fileID: 1162218788}
-  subPBManagerActiveManager: {fileID: 1162218789}
+  subPBManagerActiveManager: {fileID: 200755977}
   stateText: {fileID: 581163063}
+--- !u!114 &200755977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 200755970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1162218787}
+  active: 1
+--- !u!114 &200755978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 200755970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1216097240}
+  active: 1
 --- !u!1 &421666754
 GameObject:
   m_ObjectHideFlags: 0
@@ -683,37 +711,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1162218786}
   m_Script: {fileID: 11500000, guid: 867e956781db60b43b5b7d642bc7e375, type: 3}
---- !u!114 &1162218789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1162218787}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 1162218787}
-  active: 1
 --- !u!1 &1216097240 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1687663097546696, guid: 2573d2d26f924ce4b9a48c9bc87f4e94,
     type: 2}
   m_PrefabInternal: {fileID: 156344208}
---- !u!114 &1216097241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1216097240}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e54f0f3afde00234395bcaee6ffdbe7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 1216097240}
-  active: 1
 --- !u!1 &1787412676
 GameObject:
   m_ObjectHideFlags: 0
