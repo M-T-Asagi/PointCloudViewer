@@ -7,7 +7,6 @@ using UnityEngine.UI;
 
 public class PtsToCubingManager : MonoBehaviour
 {
-
     public enum State
     {
         Settings = 0,
@@ -24,7 +23,7 @@ public class PtsToCubingManager : MonoBehaviour
     }
 
     [SerializeField]
-    float cubeSize = 0.1f;
+    float cubeSize = 0.01f;
     [SerializeField]
     string filePath;
     [SerializeField]
@@ -112,24 +111,39 @@ public class PtsToCubingManager : MonoBehaviour
 
     void Collecting(CloudPoint[] points)
     {
+        ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         Parallel.For(0, points.Length, options, (i, loopState) =>
         {
+            IndexedVector3 newIndex = new IndexedVector3(
+                Mathf.RoundToInt(points[i].point.x / cubeSize),
+                Mathf.RoundToInt(points[i].point.y / cubeSize),
+                Mathf.RoundToInt(points[i].point.z / cubeSize)
+                );
+
+            bool canAdd = false;
+            rwlock.EnterUpgradeableReadLock();
+
             try
             {
-                IndexedVector3 newIndex = new IndexedVector3(
-                    Mathf.RoundToInt(points[i].point.x / cubeSize),
-                    Mathf.RoundToInt(points[i].point.y / cubeSize),
-                    Mathf.RoundToInt(points[i].point.z / cubeSize)
-                    );
-
-                if (!collectedPoints.ContainsKey(newIndex))
+                canAdd = !collectedPoints.ContainsKey(newIndex);
+                if (canAdd)
                 {
-                    lock (Thread.CurrentContext)
+                    rwlock.EnterWriteLock();
+                    try
+                    {
                         collectedPoints.Add(newIndex, points[i].color);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError(e);
+                        Debug.LogException(e);
+                        Debug.LogError("Collecting process is Dead!!!!!!!!!!!!!");
+                    }
+                    finally
+                    {
+                        rwlock.ExitWriteLock();
+                    }
                 }
-
-                lock (Thread.CurrentContext)
-                    subCount++;
             }
             catch (Exception e)
             {
@@ -137,6 +151,12 @@ public class PtsToCubingManager : MonoBehaviour
                 Debug.LogException(e);
                 Debug.LogError("Collecting process is Dead!!!!!!!!!!!!!");
             }
+            finally
+            {
+                rwlock.ExitUpgradeableReadLock();
+            }
+
+            subCount++;
 
             if (destroyed)
             {
@@ -200,6 +220,7 @@ public class PtsToCubingManager : MonoBehaviour
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>();
         List<Vector3> _centers = new List<Vector3>();
+        Debug.Log("add arranged " + args.chunkedPositions.Count + "points!");
         foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> val in args.chunkedPositions)
         {
             CloudPoint[] _points = val.Value.ToArray();
@@ -214,7 +235,7 @@ public class PtsToCubingManager : MonoBehaviour
         stateNow = State.Cubing;
         centers = (Vector3[])_centers.Clone();
         Debug.Log("Centers num is " + centers.Length);
-        cuber.Process(_points);
+        cuber.Process(_points, cubeSize);
     }
 
     void CubingProcessUp(object sender, PointsToCube.FinishGeneratingEventArgs args)

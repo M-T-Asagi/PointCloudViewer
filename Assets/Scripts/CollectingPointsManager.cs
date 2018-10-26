@@ -115,15 +115,15 @@ public class CollectingPointsManager : MonoBehaviour
                     Mathf.RoundToInt(points[i].point.y / cubeSize),
                     Mathf.RoundToInt(points[i].point.z / cubeSize)
                     );
-
-                if (!collectedPoints.ContainsKey(newIndex))
-                {
-                    lock (Thread.CurrentContext)
-                        collectedPoints.Add(newIndex, points[i].color);
-                }
-
                 lock (Thread.CurrentContext)
-                    subCount++;
+                {
+                    if (!collectedPoints.ContainsKey(newIndex))
+                    {
+
+                        collectedPoints.Add(newIndex, points[i].color);
+                    }
+                }
+                subCount++;
             }
             catch (Exception e)
             {

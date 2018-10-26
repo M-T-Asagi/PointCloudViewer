@@ -100,6 +100,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
                 string _read;
                 lock (Thread.CurrentContext)
                     _read = reader.ReadLine();
+
                 if (_read == null || _read == "")
                 {
                     Debug.LogError("reading failed!");
