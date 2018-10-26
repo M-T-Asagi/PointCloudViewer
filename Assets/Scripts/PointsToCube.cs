@@ -21,6 +21,7 @@ public class PointsToCube : MonoBehaviour
 
     Vector3[] prefabPoints;
     int[] prefabTriangles;
+    float size;
 
     bool generating = false;
 
@@ -65,16 +66,17 @@ public class PointsToCube : MonoBehaviour
         }
     }
 
-    public void Process(CloudPoint[] _points)
+    public void Process(CloudPoint[] _points, float _size)
     {
         points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
+        size = _size;
         generating = true;
     }
 
-    public void Process(List<CloudPoint[]> _points)
+    public void Process(List<CloudPoint[]> _points, float _size)
     {
-        Debug.Log("Cubing received!");
         points = new List<CloudPoint[]>(_points);
+        size = _size;
         generating = true;
     }
 
@@ -97,7 +99,7 @@ public class PointsToCube : MonoBehaviour
         {
             meshes[i] = _GenerateMeshes(points[i]);
         }
-        Debug.Log("Finished generate meshes!");
+        Debug.Log("Finished generate" + points.Count + " meshes!");
 
         finish?.Invoke(this, new FinishGeneratingEventArgs(meshes));
     }
@@ -118,7 +120,6 @@ public class PointsToCube : MonoBehaviour
             Array.Copy(GenerateColor(_points[i].color), 0, colors, i * prefabPoints.Length, prefabPoints.Length);
         }
 
-
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.colors = colors;
@@ -131,7 +132,7 @@ public class PointsToCube : MonoBehaviour
         Vector3[] pointsBuff = (Vector3[])prefabPoints.Clone();
         for (int i = 0; i < pointsBuff.Length; i++)
         {
-            pointsBuff[i] += point;
+            pointsBuff[i] = pointsBuff[i] * size + point;
         }
         return pointsBuff;
     }
