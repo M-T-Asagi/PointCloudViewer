@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class PtsToMeshManager : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class PtsToMeshManager : MonoBehaviour
     ProgressBarManager pbManager;
 
     GameObject meshesRoot;
-    Mesh[] meshes;
+    List<Mesh> meshes;
 
     bool allProcessIsUp = false;
 
@@ -28,7 +29,8 @@ public class PtsToMeshManager : MonoBehaviour
         baker.SetUp(meshesRoot.transform);
 
         Debug.Log("Converter totatlSectionCount : " + converter.TotalSectionCount);
-        meshes = new Mesh[converter.TotalSectionCount];
+
+        meshes = new List<Mesh>();
 
         converter.processUp += ProcessUp;
         converter.allProcessUp += AllProcessUp;
@@ -61,8 +63,8 @@ public class PtsToMeshManager : MonoBehaviour
     void FinishGenerateMeshes(object sender, MeshBaker.FinishGenerateArgs args)
     {
         Debug.Log("FinishGenerateMeshes + Processed count : " + converter.ProcessedSectionCount);
-        meshes[converter.ProcessedSectionCount - 1] = args.meshes[0];
-        baker.SetMeshToBake(args.centers, args.meshes);
+        meshes.Add(args.meshes[0].mesh);
+        baker.SetMeshToBake(args.meshes);
     }
 
     void FinishBakingMeshes(object sender, MeshBaker.FinishBakingArgs args)
@@ -73,7 +75,7 @@ public class PtsToMeshManager : MonoBehaviour
     void AllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
     {
         pbManager.Finish();
-        saver.Process(meshes, meshesRoot);
+        saver.Process(meshes.ToArray(), meshesRoot);
 
         allProcessIsUp = true;
     }

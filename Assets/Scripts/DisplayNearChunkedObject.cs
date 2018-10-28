@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class DisplayNearChunkedObject : MonoBehaviour
 {
-
     [SerializeField]
     ChunkedMeshesManager chunkedMeshesManager;
 

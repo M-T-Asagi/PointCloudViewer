@@ -192,27 +192,19 @@ public class CollectingPointsManager : MonoBehaviour
 
     void ArrangingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
     {
-        List<CloudPoint[]> points = new List<CloudPoint[]>();
-        List<Vector3> centers = new List<Vector3>();
-        foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> val in args.chunkedPositions)
-        {
-            CloudPoint[] _points = val.Value.ToArray();
-            centers.Add(val.Key.ToVector3() * arranger.ChunkSize);
-            points.Add(_points);
-        }
-        CallBakerSetPoints(points, centers);
+        CallBakerSetPoints(new List<CenteredPoints>(args.chunkedPoints.Values));
     }
 
-    void CallBakerSetPoints(List<CloudPoint[]> points, List<Vector3> centers)
+    void CallBakerSetPoints(List<CenteredPoints> points)
     {
         stateNow = State.Generating;
-        baker.SetPoints(points, centers);
+        baker.SetPoints(points);
     }
 
     void MeshesGenerated(object sender, MeshBaker.FinishGenerateArgs args)
     {
         stateNow = State.Baking;
-        baker.SetMeshToBake(args.centers, args.meshes);
+        baker.SetMeshToBake(args.meshes);
     }
 
     void MeshesBaked(object sender, MeshBaker.FinishBakingArgs args)

@@ -129,18 +129,14 @@ public class PtsToCloudPointConverter : MonoBehaviour
                 Debug.LogError("Dead!!!!!!!!!!!!!");
             }
 
+            processedPointCount++;
+            currentCount++;
 
             if (destroy)
             {
                 loopState.Stop();
                 return;
             }
-
-            lock (Thread.CurrentContext)
-            {
-                processedPointCount++;
-            }
-            currentCount++;
         });
 
         Debug.Log("process up! : " + currentCount + "/" + points.Length);
