@@ -28,13 +28,11 @@ public class MeshBaker : MonoBehaviour
 
     public class FinishGenerateArgs : EventArgs
     {
-        public Vector3[] centers;
-        public Mesh[] meshes;
+        public List<CenteredMesh> meshes;
 
-        public FinishGenerateArgs(Vector3[] _centers, Mesh[] _meshes)
+        public FinishGenerateArgs(List<CenteredMesh> _meshes)
         {
-            centers = (Vector3[])_centers.Clone();
-            meshes = (Mesh[])_meshes.Clone();
+            meshes = new List<CenteredMesh>(_meshes);
         }
     }
 
@@ -55,8 +53,7 @@ public class MeshBaker : MonoBehaviour
     ParallelOptions options;
     Transform meshesRoot = null;
 
-    Mesh[] meshesBuff;
-    Vector3[] meshesCenter;
+    List<CenteredMesh> meshes;
 
     public EventHandler<FinishBakingArgs> finishBaking;
     public EventHandler<FinishGenerateArgs> finishGenerate;
@@ -93,16 +90,31 @@ public class MeshBaker : MonoBehaviour
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
         List<Vector3> _centers = new List<Vector3>() { _center.HasValue ? _center.Value : Vector3.zero };
-        GenerateMeshStuffs(points, _centers);
+        ConvertPointsToCenteredPoints(points, _centers);
     }
 
     public void SetPoints(List<CloudPoint[]> _points, List<Vector3> _centers = null)
     {
         List<CloudPoint[]> points = new List<CloudPoint[]>(_points);
-        GenerateMeshStuffs(points, _centers);
+        ConvertPointsToCenteredPoints(points, (_centers != null ? _centers : new List<Vector3>()));
     }
 
-    async void GenerateMeshStuffs(List<CloudPoint[]> points, List<Vector3> centers)
+    void ConvertPointsToCenteredPoints(List<CloudPoint[]> _points, List<Vector3> _centers)
+    {
+        List<CenteredPoints> points = new List<CenteredPoints>();
+        for(int i = 0; i < _points.Count; i++)
+        {
+            points.Add(new CenteredPoints(new List<CloudPoint>(_points[i]), (_centers.Count > i ? _centers[i] : Vector3.zero)));
+        }
+        GenerateMeshStuffs(points);
+    }
+
+    public void  SetPoints(List<CenteredPoints> _points)
+    {
+        GenerateMeshStuffs(new List<CenteredPoints>(_points));
+    }
+
+    async void GenerateMeshStuffs(List<CenteredPoints> points)
     {
         Debug.Log("creating meshes start!");
         await Task.Run(() =>
@@ -111,20 +123,20 @@ public class MeshBaker : MonoBehaviour
 
             Parallel.For(0, points.Count, options, (i, loopState) =>
             {
-                int pointCount = points[i].Length;
+                int pointCount = points[i].points.Count;
                 Vector3[] _vertices = new Vector3[pointCount];
                 Color[] _colors = new Color[pointCount];
                 int[] _indeces = new int[pointCount];
 
                 for (int k = 0; k < pointCount; k++)
                 {
-                    _vertices[k] = points[i][k].point;
-                    _colors[k] = points[i][k].color;
+                    _vertices[k] = points[i].points[k].point;
+                    _colors[k] = points[i].points[k].color;
                     _indeces[k] = k;
                 }
 
                 lock (Thread.CurrentContext)
-                    meshStuffs.Add(new MeshStuff(centers[i], _vertices, _colors, _indeces));
+                    meshStuffs.Add(new MeshStuff(points[i].center, _vertices, _colors, _indeces));
 
                 if (destroyed)
                 {
@@ -140,57 +152,50 @@ public class MeshBaker : MonoBehaviour
     {
         Debug.Log("creating child objects start!");
 
-        Vector3[] centers = new Vector3[meshStuffs.Count];
-        Mesh[] meshes = new Mesh[meshStuffs.Count];
-        for (int i = 0; i < meshes.Length; i++)
+        List<CenteredMesh> generatedMeshes = new List<CenteredMesh>();
+
+        for (int i = 0; i < meshStuffs.Count; i++)
         {
             Mesh mesh = new Mesh();
             mesh.vertices = meshStuffs[i].vertices;
             mesh.colors = meshStuffs[i].colors;
             mesh.SetIndices(meshStuffs[i].indeces, MeshTopology.Points, 0);
-            meshes[i] = mesh;
-
-            centers[i] = meshStuffs[i].center;
-            if (center.HasValue)
-                center = (center + centers[i]) / 2f;
-            else
-                center = centers[i];
+            generatedMeshes.Add(new CenteredMesh(mesh, meshStuffs[i].center));
         }
 
-        finishGenerate?.Invoke(this, new FinishGenerateArgs(centers, meshes));
+        finishGenerate?.Invoke(this, new FinishGenerateArgs(generatedMeshes));
         Cleanup();
     }
 
-    public void SetMeshToBake(Vector3[] centers, Mesh[] meshes)
+    public void SetMeshToBake(List<CenteredMesh> _meshes)
     {
-        meshesBuff = (Mesh[])meshes.Clone();
-        meshesCenter = (Vector3[])centers.Clone();
+        meshes = new List<CenteredMesh>(_meshes);
         bake = true;
     }
 
     private void BakingMeshToNewObject()
     {
-        for (int i = 0; i < meshesBuff.Length; i++)
+        for (int i = 0; i < meshes.Count; i++)
         {
             GameObject child;
             if (meshesRoot)
             {
                 child = Instantiate(prefab, meshesRoot);
-                child.transform.localPosition = meshesCenter[i];
+                child.transform.localPosition = meshes[i].center;
             }
             else
             {
                 child = Instantiate(prefab);
-                child.transform.position = meshesCenter[i];
+                child.transform.position = meshes[i].center;
             }
 
-            child.GetComponent<MeshFilter>().sharedMesh = meshesBuff[i];
+            child.GetComponent<MeshFilter>().sharedMesh = meshes[i].mesh;
         }
 
         if (center.HasValue)
             meshesRoot.position = -center.Value;
 
-        meshesBuff = null;
+        meshes = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
     }
 

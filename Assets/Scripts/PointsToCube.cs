@@ -42,11 +42,10 @@ public class PointsToCube : MonoBehaviour
 
         for (int i = 0; i < prefabPoints.Length; i++)
         {
-            if (i == 0)
-                center = prefabPoints[i];
-            else
-                center = (center + prefabPoints[i]) / 2f;
+                center += prefabPoints[i];
         }
+
+        center /= (float)prefabPoints.Length;
 
         for (int i = 0; i < prefabPoints.Length; i++)
         {
@@ -60,21 +59,30 @@ public class PointsToCube : MonoBehaviour
             if (prefabPoints[i].z > max) max = Mathf.Abs(prefabPoints[i].z);
         }
 
+        Debug.Log("-----Generated prefab points------");
+
         for (int i = 0; i < prefabPoints.Length; i++)
         {
-            prefabPoints[i] /= max;
+            prefabPoints[i] /= max * 2f;
+            Debug.Log(prefabPoints[i].ToString());
         }
+
+        Debug.Log("-----------");
     }
 
     public void Process(CloudPoint[] _points, float _size)
     {
-        points = new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() };
-        size = _size;
-        generating = true;
+        _Process(new List<CloudPoint[]>() { (CloudPoint[])_points.Clone() }, _size);
     }
 
     public void Process(List<CloudPoint[]> _points, float _size)
     {
+        _Process(new List<CloudPoint[]>(_points), _size);
+    }
+
+    void _Process(List<CloudPoint[]> _points, float _size)
+    {
+        Debug.Log("cuing Process is called!");
         points = new List<CloudPoint[]>(_points);
         size = _size;
         generating = true;
@@ -86,7 +94,6 @@ public class PointsToCube : MonoBehaviour
         if (generating)
         {
             GenerateMeshes();
-            generating = false;
         }
     }
 
@@ -101,6 +108,7 @@ public class PointsToCube : MonoBehaviour
         }
         Debug.Log("Finished generate" + points.Count + " meshes!");
 
+        generating = false;
         finish?.Invoke(this, new FinishGeneratingEventArgs(meshes));
     }
 
