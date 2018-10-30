@@ -116,7 +116,8 @@ public class PointsArranger : MonoBehaviour
                 {
                     generateNewChunk = true;
                     addNewPoint = true;
-                } else if(!chunkedPoints[index].points.Contains(points[i]))
+                }
+                else if (!chunkedPoints[index].points.Contains(points[i]))
                 {
                     addNewPoint = true;
                 }
@@ -139,7 +140,7 @@ public class PointsArranger : MonoBehaviour
                         rwlock.ExitWriteLock();
                     }
                 }
-                if(addNewPoint)
+                if (addNewPoint)
                 {
                     rwlock.EnterWriteLock();
                     try
@@ -183,8 +184,8 @@ public class PointsArranger : MonoBehaviour
 
         Parallel.ForEach(chunkedPoints, options, (item, loopState) =>
         {
-            
             Vector3 _center = Vector3.zero;
+
             for (int i = 0; i < item.Value.points.Count; i++)
             {
                 _center += item.Value.points[i].point;
@@ -197,6 +198,9 @@ public class PointsArranger : MonoBehaviour
                 _buffPoint.point -= _center;
                 chunkedPoints[item.Key].points[i] = _buffPoint;
             }
+
+            List<CloudPoint> _points = new List<CloudPoint>(chunkedPoints[item.Key].points);
+            chunkedPoints[item.Key] = new CenteredPoints(_points, _center);
 
             ProcessedPointCount++;
             if (destroyed)
