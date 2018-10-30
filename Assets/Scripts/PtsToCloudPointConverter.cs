@@ -85,7 +85,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
     {
         Debug.Log("Scan start!");
 
-        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, totalPointCount - maxPointsNumInAnObject * (processedSectionCount + 1));
+        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, totalPointCount - maxPointsNumInAnObject * processedSectionCount);
         Debug.Log("new points array count : " + newPointsArrayCount);
 
         continuos = (newPointsArrayCount >= maxPointsNumInAnObject);
