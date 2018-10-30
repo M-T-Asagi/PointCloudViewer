@@ -19,8 +19,8 @@ public class PointsToCube : MonoBehaviour
 
     public EventHandler<FinishGeneratingEventArgs> finish;
 
-    Vector3[] prefabPoints;
-    int[] prefabTriangles;
+    List<Vector3> prefabPoints;
+    List<int> prefabTriangles;
     float size;
 
     bool generating = false;
@@ -35,24 +35,24 @@ public class PointsToCube : MonoBehaviour
 
     void GeneratePrefavPoints()
     {
-        prefabPoints = (Vector3[])mesh.vertices.Clone();
-        prefabTriangles = (int[])mesh.triangles.Clone();
+        prefabPoints = new List<Vector3>(mesh.vertices);
+        prefabTriangles = new List<int>(mesh.triangles);
         Vector3 center = Vector3.zero;
         float max = 0;
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
-                center += prefabPoints[i];
+            center += prefabPoints[i];
         }
 
-        center /= (float)prefabPoints.Length;
+        center /= (float)prefabPoints.Count;
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             prefabPoints[i] -= center;
         }
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             if (prefabPoints[i].x > max) max = Mathf.Abs(prefabPoints[i].x);
             if (prefabPoints[i].y > max) max = Mathf.Abs(prefabPoints[i].y);
@@ -61,7 +61,7 @@ public class PointsToCube : MonoBehaviour
 
         Debug.Log("-----Generated prefab points------");
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             prefabPoints[i] /= max * 2f;
             Debug.Log(prefabPoints[i].ToString());
@@ -115,43 +115,53 @@ public class PointsToCube : MonoBehaviour
     Mesh _GenerateMeshes(CloudPoint[] _points)
     {
         Mesh mesh = new Mesh();
-        Vector3[] vertices = new Vector3[prefabPoints.Length * _points.Length];
-        int[] triangles = new int[prefabTriangles.Length * _points.Length];
-        Color[] colors = new Color[prefabPoints.Length * _points.Length];
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+        List<Color> colors = new List<Color>();
 
         Debug.Log("Process " + _points.Length + " points!");
 
         for (int i = 0; i < _points.Length; i++)
         {
-            Array.Copy(GeneratePointedVertex(_points[i].point), 0, vertices, i * prefabPoints.Length, prefabPoints.Length);
-            Array.Copy(prefabTriangles, 0, triangles, i * prefabTriangles.Length, prefabTriangles.Length);
-            Array.Copy(GenerateColor(_points[i].color), 0, colors, i * prefabPoints.Length, prefabPoints.Length);
+            vertices.AddRange(GeneratePointedVertex(_points[i].point));
+            triangles.AddRange(GenerateTriangles(i));
+            colors.AddRange(GenerateColor(_points[i].color));
         }
 
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.colors = colors;
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.colors = colors.ToArray();
 
         return mesh;
     }
 
-    Vector3[] GeneratePointedVertex(Vector3 point)
+    List<Vector3> GeneratePointedVertex(Vector3 point)
     {
-        Vector3[] pointsBuff = (Vector3[])prefabPoints.Clone();
-        for (int i = 0; i < pointsBuff.Length; i++)
+        List<Vector3> pointsBuff = new List<Vector3>();
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
-            pointsBuff[i] = pointsBuff[i] * size + point;
+            pointsBuff.Add(prefabPoints[i] * size + point);
         }
         return pointsBuff;
     }
 
-    Color[] GenerateColor(Color color)
+    List<Color> GenerateColor(Color color)
     {
-        Color[] colors = new Color[prefabPoints.Length];
-        for (int i = 0; i < colors.Length; i++)
+        List<Color> colors = new List<Color>();
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
-            colors[i] = color;
+            colors.Add(color);
         }
         return colors;
+    }
+
+    List<int> GenerateTriangles(int index)
+    {
+        List<int> triangles = new List<int>();
+        for (int i = 0; i < prefabTriangles.Count; i++)
+        {
+            triangles.Add(prefabTriangles[i] + index * prefabPoints.Count);
+        }
+        return triangles;
     }
 }
