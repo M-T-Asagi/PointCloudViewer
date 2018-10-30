@@ -102,14 +102,14 @@ public class MeshBaker : MonoBehaviour
     void ConvertPointsToCenteredPoints(List<CloudPoint[]> _points, List<Vector3> _centers)
     {
         List<CenteredPoints> points = new List<CenteredPoints>();
-        for(int i = 0; i < _points.Count; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
             points.Add(new CenteredPoints(new List<CloudPoint>(_points[i]), (_centers.Count > i ? _centers[i] : Vector3.zero)));
         }
         GenerateMeshStuffs(points);
     }
 
-    public void  SetPoints(List<CenteredPoints> _points)
+    public void SetPoints(List<CenteredPoints> _points)
     {
         GenerateMeshStuffs(new List<CenteredPoints>(_points));
     }
@@ -191,9 +191,8 @@ public class MeshBaker : MonoBehaviour
 
             child.GetComponent<MeshFilter>().sharedMesh = meshes[i].mesh;
         }
-
         if (center.HasValue)
-            meshesRoot.position = -center.Value;
+            meshesRoot.position = center.Value;
 
         meshes = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
