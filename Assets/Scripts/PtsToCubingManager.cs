@@ -236,10 +236,12 @@ public class PtsToCubingManager : MonoBehaviour
     {
         stateNow = State.Cubing;
         IndexedVector3 process = everCubed[0];
-        Debug.Log("State in cubing!");
+        Debug.Log("---State in cubing!---");
         Debug.Log("Reaming point nums: " + everCubed.Count);
         Debug.Log("Processed chunks num: " + chunkedMeshes.Count);
         Debug.Log("Will process point nums: " + chunkedPoints[process].points.Count);
+        Debug.Log("Chunked points center: " + chunkedPoints[process].center);
+        Debug.Log("-----------------------");
         processingChunkCenter = chunkedPoints[process].center;
         cuber.Process(chunkedPoints[process].points.ToArray(), cubeSize);
         everCubed.RemoveAt(0);
