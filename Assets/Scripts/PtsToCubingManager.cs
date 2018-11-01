@@ -14,6 +14,7 @@ public class PtsToCubingManager : MonoBehaviour
         Collecting,
         Restoring,
         Arranging,
+        Chunking,
         Cubing,
         Generating,
         Baking,
@@ -26,6 +27,8 @@ public class PtsToCubingManager : MonoBehaviour
     float cubeSize = 0.01f;
     [SerializeField]
     string filePath;
+    [SerializeField]
+    int maxThreadNum = 3;
     [SerializeField]
     PtsToCloudPointConverter converter;
     [SerializeField]
@@ -71,7 +74,7 @@ public class PtsToCubingManager : MonoBehaviour
         collectedPoints = new Dictionary<IndexedVector3, Color>();
 
         options = new ParallelOptions();
-        options.MaxDegreeOfParallelism = 4;
+        options.MaxDegreeOfParallelism = maxThreadNum;
 
         converter.SetupPointScaning(filePath);
 
@@ -81,7 +84,8 @@ public class PtsToCubingManager : MonoBehaviour
 
         converter.processUp += ProcessUp;
         converter.allProcessUp += AllProcessUp;
-        arranger.finishProcess += ArrangingProcessUp;
+        arranger.finishArranging += ArrangingProcessUp;
+        arranger.finishProcess += ChunkingProcessUp;
         cuber.finish += CubingProcessUp;
         baker.finishBaking += MeshesBaked;
 
@@ -220,10 +224,23 @@ public class PtsToCubingManager : MonoBehaviour
     {
         stateNow = State.Arranging;
         CloudPoint[] points = (CloudPoint[])_points.Clone();
-        arranger.Process(points);
+        arranger.ProcessArranging(points);
     }
 
-    void ArrangingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
+    void ArrangingProcessUp(object sender, PointsArranger.FinishArrangingArgs args)
+    {
+        Debug.Log("Receive finished arranging event.");
+        CallChunking(args.arrangedPoints);
+    }
+
+    void CallChunking(Dictionary<IndexedVector3, List<CloudPoint>> _points)
+    {
+        stateNow = State.Chunking;
+        Dictionary<IndexedVector3, List<CloudPoint>> points = new Dictionary<IndexedVector3, List<CloudPoint>>(_points);
+        arranger.ProcessChunking(points);
+    }
+
+    void ChunkingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
     {
         chunkedPoints = new Dictionary<IndexedVector3, CenteredPoints>(args.chunkedPoints);
         everCubed = new List<IndexedVector3>(chunkedPoints.Keys);
@@ -307,6 +324,10 @@ public class PtsToCubingManager : MonoBehaviour
                 pbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
                 pbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
                 break;
+            case State.Chunking:
+                pbManager.UpdateState((float)arranger.ProcessedChunkedCount / (float)arranger.AllChunkCount);
+                pbManager.UpdateStateText(arranger.ProcessedChunkedCount + " /\n" + arranger.AllChunkCount);
+                break;
             default:
                 pbManagerActiveManager.Active = false;
                 break;
@@ -321,6 +342,10 @@ public class PtsToCubingManager : MonoBehaviour
             case State.Collecting:
                 subpbManager.UpdateState((float)subCount / (float)subAll);
                 subpbManager.UpdateStateText(subCount + "/\n" + subAll);
+                break;
+            case State.Chunking:
+                subpbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
+                subpbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
                 break;
             default:
                 subPBManagerActiveManager.Active = false;
