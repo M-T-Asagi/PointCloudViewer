@@ -68,6 +68,9 @@ public class PtsToCubingManager : MonoBehaviour
     int subCount = 0;
     int subAll = 0;
 
+    int bakeCount = 0;
+    Vector3 center = Vector3.zero;
+
     // Use this for initialization
     void Start()
     {
@@ -268,6 +271,9 @@ public class PtsToCubingManager : MonoBehaviour
     void CubingProcessUp(object sender, PointsToCube.FinishGeneratingEventArgs args)
     {
         Debug.Log("Cubing process up!");
+        center += processingChunkCenter;
+        bakeCount++;
+
         chunkedMeshes.Add(new CenteredMesh(args.generatedMeshes[0], processingChunkCenter));
         if (everCubed.Count > 0)
             CallPointsToCube();
@@ -278,6 +284,7 @@ public class PtsToCubingManager : MonoBehaviour
     void CallMeshBake()
     {
         Debug.Log("Bake the mesh!");
+        baker.Center = center / (float)bakeCount;
         baker.SetMeshToBake(chunkedMeshes);
     }
 
@@ -328,6 +335,10 @@ public class PtsToCubingManager : MonoBehaviour
                 pbManager.UpdateState((float)arranger.ProcessedChunkedCount / (float)arranger.AllChunkCount);
                 pbManager.UpdateStateText(arranger.ProcessedChunkedCount + " /\n" + arranger.AllChunkCount);
                 break;
+            case State.Cubing:
+                pbManager.UpdateState((float)cuber.ProcessedStuffingChunkCount / (float)cuber.AllChunkCount);
+                pbManager.UpdateStateText(cuber.ProcessedStuffingChunkCount + " /\n" + cuber.AllChunkCount);
+                break;
             default:
                 pbManagerActiveManager.Active = false;
                 break;
@@ -346,6 +357,10 @@ public class PtsToCubingManager : MonoBehaviour
             case State.Chunking:
                 subpbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
                 subpbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
+                break;
+            case State.Cubing:
+                pbManager.UpdateState((float)cuber.ProcessedStuffingPointsCount / (float)cuber.AllOfStuffingPointsCount);
+                pbManager.UpdateStateText(cuber.ProcessedStuffingPointsCount + " /\n" + cuber.AllOfStuffingPointsCount);
                 break;
             default:
                 subPBManagerActiveManager.Active = false;
