@@ -6,22 +6,6 @@ using UnityEngine;
 
 public class MeshBaker : MonoBehaviour
 {
-    public class MeshStuff
-    {
-        public Vector3 center;
-        public Vector3[] vertices;
-        public Color[] colors;
-        public int[] indeces;
-
-        public MeshStuff(Vector3 _center, Vector3[] _vertices, Color[] _colors, int[] _indeces)
-        {
-            center = _center;
-            vertices = (Vector3[])_vertices.Clone();
-            colors = (Color[])_colors.Clone();
-            indeces = (int[])_indeces.Clone();
-        }
-    }
-
     public class FinishBakingArgs : EventArgs
     {
     }
@@ -49,6 +33,8 @@ public class MeshBaker : MonoBehaviour
     bool destroyed = false;
 
     Vector3? center = null;
+
+    public Vector3 Center { get { return center.Value; } set { center = value; } }
 
     ParallelOptions options;
     Transform meshesRoot = null;
@@ -136,7 +122,7 @@ public class MeshBaker : MonoBehaviour
                 }
 
                 lock (Thread.CurrentContext)
-                    meshStuffs.Add(new MeshStuff(points[i].center, _vertices, _colors, _indeces));
+                    meshStuffs.Add(new MeshStuff(points[i].center, _vertices, _colors, new int[0], _indeces));
 
                 if (destroyed)
                 {
@@ -192,7 +178,7 @@ public class MeshBaker : MonoBehaviour
             child.GetComponent<MeshFilter>().sharedMesh = meshes[i].mesh;
         }
         if (center.HasValue)
-            meshesRoot.position = center.Value;
+            meshesRoot.position -= center.Value;
 
         meshes = null;
         finishBaking?.Invoke(this, new FinishBakingArgs());
