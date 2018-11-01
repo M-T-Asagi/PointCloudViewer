@@ -24,3 +24,21 @@ public struct CenteredMesh
         center = _center;
     }
 }
+
+public struct MeshStuff
+{
+    public Vector3 center;
+    public Vector3[] vertices;
+    public Color[] colors;
+    public int[] indeces;
+    public int[] triangles;
+
+    public MeshStuff(Vector3 _center, Vector3[] _vertices, Color[] _colors, int[] _triangles, int[] _indeces)
+    {
+        center = _center;
+        vertices = (Vector3[])_vertices.Clone();
+        colors = (Color[])_colors.Clone();
+        triangles = (int[])_triangles.Clone();
+        indeces = (int[])_indeces.Clone();
+    }
+}
