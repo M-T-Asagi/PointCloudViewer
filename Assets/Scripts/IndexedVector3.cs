@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
+[Serializable]
 public class IndexedVector3 : IEquatable<IndexedVector3>
 {
     public int x;
