@@ -29,6 +29,8 @@ public class PointsToCube : MonoBehaviour
     public int ProcessedStuffingPointsCount { get; private set; }
     public int AllOfStuffingPointsCount { get; private set; }
 
+    public int PrefabMeshesVerticesCount { get { return mesh.vertexCount; } }
+
     List<Vector3> prefabPoints;
     List<int> prefabTriangles;
     float size;
@@ -131,22 +133,13 @@ public class PointsToCube : MonoBehaviour
             {
                 try
                 {
-                    {
-                        Vector3[] _points = GeneratePointedVertex(buffPoints[i].point);
-                        for (int k = 0; k < _points.Length; k++)
-                            vertices[i * prefabPoints.Count + k] = _points[k];
-                    }
-                    {
-                        int[] _triangles = GenerateTriangles(i);
-                        for (int k = 0; k < _triangles.Length; k++)
-                            triangles[i * prefabTriangles.Count + k] = _triangles[k];
+                    for (int k = 0; k < prefabPoints.Count; k++)
+                        vertices[i * prefabPoints.Count + k] = prefabPoints[k] * size + buffPoints[i].point;
+                    for (int k = 0; k < prefabTriangles.Count; k++)
+                        triangles[i * prefabTriangles.Count + k] = prefabTriangles[k] + i * prefabPoints.Count;
+                    for (int k = 0; k < prefabPoints.Count; k++)
+                        colors[i * prefabPoints.Count + k] = buffPoints[i].color;
 
-                    }
-                    {
-                        Color[] _colors = GenerateColor(buffPoints[i].color);
-                        for (int k = 0; k < _colors.Length; k++)
-                            colors[i * prefabPoints.Count + k] = _colors[k];
-                    }
                     ProcessedStuffingPointsCount++;
                 }
                 catch (Exception e)
@@ -166,36 +159,6 @@ public class PointsToCube : MonoBehaviour
             meshStuffs.Add(new MeshStuff(Vector3.zero, vertices, colors, triangles, new int[0]));
             ProcessedStuffingChunkCount++;
         }
-    }
-
-    Vector3[] GeneratePointedVertex(Vector3 point)
-    {
-        Vector3[] pointsBuff = new Vector3[prefabPoints.Count];
-        for (int i = 0; i < prefabPoints.Count; i++)
-        {
-            pointsBuff[i] = prefabPoints[i] * size + point;
-        }
-        return pointsBuff;
-    }
-
-    Color[] GenerateColor(Color color)
-    {
-        Color[] colors = new Color[prefabPoints.Count];
-        for (int i = 0; i < prefabPoints.Count; i++)
-        {
-            colors[i] = color;
-        }
-        return colors;
-    }
-
-    int[] GenerateTriangles(int index)
-    {
-        int[] triangles = new int[prefabTriangles.Count];
-        for (int i = 0; i < prefabTriangles.Count; i++)
-        {
-            triangles[i] = prefabTriangles[i] + index * prefabPoints.Count;
-        }
-        return triangles;
     }
 
     // Update is called once per frame
