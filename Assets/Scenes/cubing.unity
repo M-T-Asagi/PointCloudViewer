@@ -296,7 +296,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbf9bc2136d28e84e83d1f82edeb3838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sizeScale: 1
+  sizeScale: 0.001
   maxPointsNumInAnObject: 1000000
   maxThreadNum: 10
 --- !u!114 &200755975
@@ -323,9 +323,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7ce7c0afecc4c94d88728143c550dbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeSize: 0.01
-  filePath: Assets\Resources\PTS\test.txt
+  cubeSize: 0.1
+  filePath: Assets\Resources\PTS\DG_30mm.txt
   maxThreadNum: 10
+  maxVertexCountInAMesh: 64000
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
   baker: {fileID: 200755975}
