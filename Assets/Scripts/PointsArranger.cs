@@ -6,6 +6,16 @@ using UnityEngine;
 
 public class PointsArranger : MonoBehaviour
 {
+    public class FinishArrangingArgs : EventArgs
+    {
+        public Dictionary<IndexedVector3, List<CloudPoint>> arrangedPoints;
+
+        public FinishArrangingArgs(Dictionary<IndexedVector3, List<CloudPoint>> _arrangedPoints)
+        {
+            arrangedPoints = new Dictionary<IndexedVector3, List<CloudPoint>>(_arrangedPoints);
+        }
+    }
+
     public class FinishProcessArgs : EventArgs
     {
         public Dictionary<IndexedVector3, CenteredPoints> chunkedPoints;
@@ -23,10 +33,14 @@ public class PointsArranger : MonoBehaviour
     [SerializeField]
     int maxThreadNum = 4;
 
+    public EventHandler<FinishArrangingArgs> finishArranging;
     public EventHandler<FinishProcessArgs> finishProcess;
 
     public int ProcessedPointCount { get; private set; }
     public int AllPointCount { get; private set; }
+
+    public int ProcessedChunkedCount { get; private set; }
+    public int AllChunkCount { get; private set; }
 
     ParallelOptions options;
 
@@ -35,6 +49,10 @@ public class PointsArranger : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        ProcessedPointCount = 0;
+        ProcessedChunkedCount = 0;
+        AllPointCount = 0;
+        AllChunkCount = 0;
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = maxThreadNum;
     }
@@ -44,7 +62,7 @@ public class PointsArranger : MonoBehaviour
         parentObject.AddComponent<ChunkedMeshesManager>();
     }
 
-    public void Process(Vector3[] _vertices, Color[] _colors)
+    public void ProcessArranging(Vector3[] _vertices, Color[] _colors)
     {
         Vector3[] vertices = new Vector3[_vertices.Length];
         Array.Copy(_vertices, vertices, _vertices.Length);
@@ -60,7 +78,7 @@ public class PointsArranger : MonoBehaviour
             return ConvertingProcess(vertices, colors);
         }).ContinueWith((res) =>
         {
-            SetPointsAsync(res.Result);
+            Arranging(res.Result);
         });
     }
 
@@ -81,25 +99,25 @@ public class PointsArranger : MonoBehaviour
         return cloudPoints;
     }
 
-    public void Process(CloudPoint[] points)
+    public void ProcessArranging(CloudPoint[] points)
     {
         CloudPoint[] cloudPoints = (CloudPoint[])points.Clone();
-        SetPoints(cloudPoints);
+        SetPointsForArranging(cloudPoints);
     }
 
-    async void SetPoints(CloudPoint[] points)
+    async void SetPointsForArranging(CloudPoint[] points)
     {
         AllPointCount = points.Length;
         ProcessedPointCount = 0;
-        await Task.Run(() => SetPointsAsync(points));
+        await Task.Run(() => Arranging(points));
     }
 
-    void SetPointsAsync(CloudPoint[] points)
+    void Arranging(CloudPoint[] points)
     {
-        Dictionary<IndexedVector3, CenteredPoints> chunkedPoints = new Dictionary<IndexedVector3, CenteredPoints>();
+        Dictionary<IndexedVector3, List<CloudPoint>> arrangedPoints = new Dictionary<IndexedVector3, List<CloudPoint>>();
 
         ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
-        Debug.Log("Start chunking.");
+        Debug.Log("Start Arranging " + points.Length + " counts.");
 
         Parallel.For(0, points.Length, options, (i, loopState) =>
         {
@@ -107,18 +125,13 @@ public class PointsArranger : MonoBehaviour
                 Mathf.RoundToInt(points[i].point.x / chunkSize), Mathf.RoundToInt(points[i].point.y / chunkSize), Mathf.RoundToInt(points[i].point.z / chunkSize));
 
             bool generateNewChunk = false;
-            bool addNewPoint = false;
 
             rwlock.EnterUpgradeableReadLock();
             try
             {
-                if (!chunkedPoints.ContainsKey(index))
+                if (!arrangedPoints.ContainsKey(index))
                 {
                     generateNewChunk = true;
-                    addNewPoint = true;
-                } else if(!chunkedPoints[index].points.Contains(points[i]))
-                {
-                    addNewPoint = true;
                 }
 
                 if (generateNewChunk)
@@ -126,7 +139,7 @@ public class PointsArranger : MonoBehaviour
                     rwlock.EnterWriteLock();
                     try
                     {
-                        chunkedPoints.Add(index, new CenteredPoints(new List<CloudPoint>(), Vector3.zero));
+                        arrangedPoints.Add(index, new List<CloudPoint>());
                     }
                     catch (Exception e)
                     {
@@ -139,25 +152,7 @@ public class PointsArranger : MonoBehaviour
                         rwlock.ExitWriteLock();
                     }
                 }
-                if(addNewPoint)
-                {
-                    rwlock.EnterWriteLock();
-                    try
-                    {
-                        chunkedPoints[index].points.Add(points[i]);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError(e);
-                        Debug.LogException(e);
-                        Debug.LogError("Arranging points process is Dead!!!!!!!!!!!!!");
-                    }
-                    finally
-                    {
-                        rwlock.ExitWriteLock();
-                    }
-                }
-
+                arrangedPoints[index].Add(points[i]);
             }
             catch (Exception e)
             {
@@ -177,37 +172,88 @@ public class PointsArranger : MonoBehaviour
                 return;
             }
         });
+        Debug.Log("finish arranging.");
+        finishArranging?.Invoke(this, new FinishArrangingArgs(arrangedPoints));
+    }
 
-        ProcessedPointCount = 0;
-        AllPointCount = chunkedPoints.Count;
+    public void ProcessChunking(Dictionary<IndexedVector3, List<CloudPoint>> _arrangedPoints)
+    {
+        Dictionary<IndexedVector3, List<CloudPoint>> arrangedPoints = new Dictionary<IndexedVector3, List<CloudPoint>>(_arrangedPoints);
+        CallChunking(arrangedPoints);
+    }
 
-        Parallel.ForEach(chunkedPoints, options, (item, loopState) =>
+    async void CallChunking(Dictionary<IndexedVector3, List<CloudPoint>> arrangedPoints)
+    {
+        ProcessedChunkedCount = 0;
+        AllChunkCount = arrangedPoints.Count;
+        await Task.Run(() => Chunking(arrangedPoints));
+    }
+
+    void Chunking(Dictionary<IndexedVector3, List<CloudPoint>> arrangedPoints)
+    {
+        Debug.Log("Start adding points to chunks.");
+
+        Dictionary<IndexedVector3, CenteredPoints> chunkedPoints = new Dictionary<IndexedVector3, CenteredPoints>();
+        foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> item in arrangedPoints)
         {
-            
             Vector3 _center = Vector3.zero;
-            for (int i = 0; i < item.Value.points.Count; i++)
-            {
-                _center += item.Value.points[i].point;
-            }
 
-            _center /= (float)item.Value.points.Count;
-            for (int i = 0; i < item.Value.points.Count; i++)
+            ProcessedPointCount = 0;
+            AllPointCount = item.Value.Count;
+            Parallel.For(0, item.Value.Count, options, (i, loopState) =>
             {
-                CloudPoint _buffPoint = item.Value.points[i];
-                _buffPoint.point -= _center;
-                chunkedPoints[item.Key].points[i] = _buffPoint;
-            }
+                try
+                {
+                    _center += item.Value[i].point;
+                    ProcessedPointCount++;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                    Debug.LogException(e);
+                    Debug.LogError("Calucuation center process in chunking process is Dead!!!!!!!!!!!!!");
+                }
 
-            ProcessedPointCount++;
-            if (destroyed)
+
+                if (destroyed)
+                {
+                    loopState.Stop();
+                    return;
+                }
+            });
+            _center /= (float)item.Value.Count;
+
+            ProcessedPointCount = 0;
+            Parallel.For(0, item.Value.Count, options, (i, loopState) =>
             {
-                loopState.Stop();
-                return;
-            }
-        });
+                try
+                {
+                    CloudPoint _buffPoint = item.Value[i];
+                    _buffPoint.point -= _center;
+                    item.Value[i] = _buffPoint;
+                    ProcessedPointCount++;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                    Debug.LogException(e);
+                    Debug.LogError("Cetering process in chunking process is Dead!!!!!!!!!!!!!");
+                }
+
+                if (destroyed)
+                {
+                    loopState.Stop();
+                    return;
+                }
+            });
+
+            List<CloudPoint> _points = new List<CloudPoint>(item.Value);
+            chunkedPoints.Add(item.Key, new CenteredPoints(_points, _center));
+
+            ProcessedChunkedCount++;
+        }
 
         Debug.Log("Finish one of processes.");
-
         finishProcess?.Invoke(this, new FinishProcessArgs(chunkedPoints));
     }
 

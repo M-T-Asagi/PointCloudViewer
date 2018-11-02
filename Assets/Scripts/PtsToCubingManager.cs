@@ -14,6 +14,8 @@ public class PtsToCubingManager : MonoBehaviour
         Collecting,
         Restoring,
         Arranging,
+        Chunking,
+        Slicing,
         Cubing,
         Generating,
         Baking,
@@ -26,6 +28,10 @@ public class PtsToCubingManager : MonoBehaviour
     float cubeSize = 0.01f;
     [SerializeField]
     string filePath;
+    [SerializeField]
+    int maxThreadNum = 3;
+    [SerializeField]
+    int maxVertexCountInAMesh = 64000;
     [SerializeField]
     PtsToCloudPointConverter converter;
     [SerializeField]
@@ -51,7 +57,7 @@ public class PtsToCubingManager : MonoBehaviour
     Dictionary<IndexedVector3, Color> collectedPoints;
     ParallelOptions options;
 
-    Dictionary<IndexedVector3, CenteredPoints> chunkedPoints;
+    Dictionary<IndexedVector3, List<CenteredPoints>> chunkedPoints;
     List<CenteredMesh> chunkedMeshes;
 
     List<IndexedVector3> everCubed;
@@ -65,13 +71,16 @@ public class PtsToCubingManager : MonoBehaviour
     int subCount = 0;
     int subAll = 0;
 
+    int bakeCount = 0;
+    Vector3 center = Vector3.zero;
+
     // Use this for initialization
     void Start()
     {
         collectedPoints = new Dictionary<IndexedVector3, Color>();
 
         options = new ParallelOptions();
-        options.MaxDegreeOfParallelism = 4;
+        options.MaxDegreeOfParallelism = maxThreadNum;
 
         converter.SetupPointScaning(filePath);
 
@@ -81,7 +90,8 @@ public class PtsToCubingManager : MonoBehaviour
 
         converter.processUp += ProcessUp;
         converter.allProcessUp += AllProcessUp;
-        arranger.finishProcess += ArrangingProcessUp;
+        arranger.finishArranging += ArrangingProcessUp;
+        arranger.finishProcess += ChunkingProcessUp;
         cuber.finish += CubingProcessUp;
         baker.finishBaking += MeshesBaked;
 
@@ -220,35 +230,77 @@ public class PtsToCubingManager : MonoBehaviour
     {
         stateNow = State.Arranging;
         CloudPoint[] points = (CloudPoint[])_points.Clone();
-        arranger.Process(points);
+        arranger.ProcessArranging(points);
     }
 
-    void ArrangingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
+    void ArrangingProcessUp(object sender, PointsArranger.FinishArrangingArgs args)
     {
-        chunkedPoints = new Dictionary<IndexedVector3, CenteredPoints>(args.chunkedPoints);
+        Debug.Log("Receive finished arranging event.");
+        CallChunking(args.arrangedPoints);
+    }
+
+    void CallChunking(Dictionary<IndexedVector3, List<CloudPoint>> _points)
+    {
+        stateNow = State.Chunking;
+        Dictionary<IndexedVector3, List<CloudPoint>> points = new Dictionary<IndexedVector3, List<CloudPoint>>(_points);
+        arranger.ProcessChunking(points);
+    }
+
+    void ChunkingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
+    {
+        CallSliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(args.chunkedPoints));
+    }
+
+    async void CallSliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
+    {
+        chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>();
+        await Task.Run(() => SliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(_points)));
         everCubed = new List<IndexedVector3>(chunkedPoints.Keys);
         chunkedMeshes = new List<CenteredMesh>();
-        Debug.Log("add arranged " + args.chunkedPoints.Count + "points!");
+        Debug.Log("add arranged " + chunkedPoints.Count + "points!");
         CallPointsToCube();
+    }
+
+    void SliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
+    {
+        int maxPointsInAMesh = Mathf.FloorToInt((float)maxVertexCountInAMesh / (float)cuber.PrefabMeshesVerticesCount);
+        Parallel.ForEach(_points, options, (item, loopState) =>
+        {
+            List<CenteredPoints> buffCenteredPoints = new List<CenteredPoints>();
+            for (int i = 0; i < Mathf.FloorToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
+            {
+                CenteredPoints newPoints = new CenteredPoints();
+                newPoints.center = item.Value.center;
+                newPoints.points = new List<CloudPoint>(item.Value.points.GetRange(i * maxPointsInAMesh, Mathf.Min(item.Value.points.Count - i * maxPointsInAMesh, maxPointsInAMesh)));
+                buffCenteredPoints.Add(newPoints);
+            }
+            chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
+        });
     }
 
     void CallPointsToCube()
     {
         stateNow = State.Cubing;
         IndexedVector3 process = everCubed[0];
-        Debug.Log("State in cubing!");
+        Debug.Log("---State in cubing!---");
         Debug.Log("Reaming point nums: " + everCubed.Count);
         Debug.Log("Processed chunks num: " + chunkedMeshes.Count);
-        Debug.Log("Will process point nums: " + chunkedPoints[process].points.Count);
-        processingChunkCenter = chunkedPoints[process].center;
-        cuber.Process(chunkedPoints[process].points.ToArray(), cubeSize);
-        everCubed.RemoveAt(0);
-        chunkedPoints.Remove(process);
+        Debug.Log("Will process point nums: " + chunkedPoints[process][0].points.Count);
+        Debug.Log("Chunked points center: " + chunkedPoints[process][0].center);
+        Debug.Log("-----------------------");
+        processingChunkCenter = chunkedPoints[process][0].center;
+        cuber.Process(chunkedPoints[process][0].points.ToArray(), cubeSize);
+        chunkedPoints[process].RemoveAt(0);
+        if (chunkedPoints[process].Count == 0)
+            everCubed.RemoveAt(0);
     }
 
     void CubingProcessUp(object sender, PointsToCube.FinishGeneratingEventArgs args)
     {
         Debug.Log("Cubing process up!");
+        center += processingChunkCenter;
+        bakeCount++;
+
         chunkedMeshes.Add(new CenteredMesh(args.generatedMeshes[0], processingChunkCenter));
         if (everCubed.Count > 0)
             CallPointsToCube();
@@ -259,6 +311,7 @@ public class PtsToCubingManager : MonoBehaviour
     void CallMeshBake()
     {
         Debug.Log("Bake the mesh!");
+        baker.Center = center / (float)bakeCount;
         baker.SetMeshToBake(chunkedMeshes);
     }
 
@@ -305,6 +358,14 @@ public class PtsToCubingManager : MonoBehaviour
                 pbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
                 pbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
                 break;
+            case State.Chunking:
+                pbManager.UpdateState((float)arranger.ProcessedChunkedCount / (float)arranger.AllChunkCount);
+                pbManager.UpdateStateText(arranger.ProcessedChunkedCount + " /\n" + arranger.AllChunkCount);
+                break;
+            case State.Cubing:
+                pbManager.UpdateState((float)cuber.ProcessedStuffingChunkCount / (float)cuber.AllChunkCount);
+                pbManager.UpdateStateText(cuber.ProcessedStuffingChunkCount + " /\n" + cuber.AllChunkCount);
+                break;
             default:
                 pbManagerActiveManager.Active = false;
                 break;
@@ -319,6 +380,14 @@ public class PtsToCubingManager : MonoBehaviour
             case State.Collecting:
                 subpbManager.UpdateState((float)subCount / (float)subAll);
                 subpbManager.UpdateStateText(subCount + "/\n" + subAll);
+                break;
+            case State.Chunking:
+                subpbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
+                subpbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
+                break;
+            case State.Cubing:
+                pbManager.UpdateState((float)cuber.ProcessedStuffingPointsCount / (float)cuber.AllOfStuffingPointsCount);
+                pbManager.UpdateStateText(cuber.ProcessedStuffingPointsCount + " /\n" + cuber.AllOfStuffingPointsCount);
                 break;
             default:
                 subPBManagerActiveManager.Active = false;

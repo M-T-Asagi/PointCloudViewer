@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -275,70 +275,3 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!1001 &1218252928
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4384007849058990, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c, type: 2}
-  m_IsPrefabAsset: 0
---- !u!1 &1218252929 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1809362485615644, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c,
-    type: 2}
-  m_PrefabInternal: {fileID: 1218252928}
---- !u!114 &1218252930 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114282245565729406, guid: 1d04a1a1b5ff90b4f8e4d3a6dbd6376c,
-    type: 2}
-  m_PrefabInternal: {fileID: 1218252928}
-  m_Script: {fileID: 11500000, guid: 87225445915368247bfe9ffdc5fc3882, type: 3}
---- !u!114 &1218252931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1218252929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4a55afff41f5dd4ea8090ae61638ba6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  chunkedMeshesManager: {fileID: 1218252930}
-  displayDistance: 10
-  eye: {fileID: 1217673817}

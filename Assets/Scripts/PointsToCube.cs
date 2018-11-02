@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 
 public class PointsToCube : MonoBehaviour
 {
@@ -16,43 +18,63 @@ public class PointsToCube : MonoBehaviour
 
     [SerializeField]
     Mesh mesh;
+    [SerializeField]
+    int maxThreadNum = 4;
 
     public EventHandler<FinishGeneratingEventArgs> finish;
 
-    Vector3[] prefabPoints;
-    int[] prefabTriangles;
+    public int ProcessedStuffingChunkCount { get; private set; }
+    public int AllChunkCount { get; private set; }
+
+    public int ProcessedStuffingPointsCount { get; private set; }
+    public int AllOfStuffingPointsCount { get; private set; }
+
+    public int PrefabMeshesVerticesCount { get { return mesh.vertexCount; } }
+
+    List<Vector3> prefabPoints;
+    List<int> prefabTriangles;
     float size;
 
     bool generating = false;
+    bool destroyed = false;
 
-    List<CloudPoint[]> points;
+    List<MeshStuff> meshStuffs;
+    ParallelOptions options;
 
     // Use this for initialization
     void Start()
     {
         GeneratePrefavPoints();
+        options = new ParallelOptions();
+        options.MaxDegreeOfParallelism = maxThreadNum;
+
+        ProcessedStuffingChunkCount = 0;
+        AllChunkCount = 0;
+
+        ProcessedStuffingPointsCount = 0;
+        AllOfStuffingPointsCount = 0;
     }
 
     void GeneratePrefavPoints()
     {
-        prefabPoints = (Vector3[])mesh.vertices.Clone();
-        prefabTriangles = (int[])mesh.triangles.Clone();
+        prefabPoints = new List<Vector3>(mesh.vertices);
+        prefabTriangles = new List<int>(mesh.triangles);
         Vector3 center = Vector3.zero;
         float max = 0;
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
-                center += prefabPoints[i];
+            center += prefabPoints[i];
         }
 
-        center /= (float)prefabPoints.Length;
+        center /= (float)prefabPoints.Count;
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             prefabPoints[i] -= center;
         }
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             if (prefabPoints[i].x > max) max = Mathf.Abs(prefabPoints[i].x);
             if (prefabPoints[i].y > max) max = Mathf.Abs(prefabPoints[i].y);
@@ -61,7 +83,7 @@ public class PointsToCube : MonoBehaviour
 
         Debug.Log("-----Generated prefab points------");
 
-        for (int i = 0; i < prefabPoints.Length; i++)
+        for (int i = 0; i < prefabPoints.Count; i++)
         {
             prefabPoints[i] /= max * 2f;
             Debug.Log(prefabPoints[i].ToString());
@@ -83,9 +105,60 @@ public class PointsToCube : MonoBehaviour
     void _Process(List<CloudPoint[]> _points, float _size)
     {
         Debug.Log("cuing Process is called!");
-        points = new List<CloudPoint[]>(_points);
         size = _size;
+        ProcessedStuffingChunkCount = 0;
+        AllChunkCount = _points.Count;
+        CallGenerateStuff(new List<CloudPoint[]>(_points));
+    }
+
+    async void CallGenerateStuff(List<CloudPoint[]> points)
+    {
+        Debug.Log("created cubed meshes stuffs.");
+        await Task.Run(() => GenerateStuff(points));
         generating = true;
+    }
+
+    void GenerateStuff(List<CloudPoint[]> points)
+    {
+        meshStuffs = new List<MeshStuff>();
+        foreach (CloudPoint[] buffPoints in points)
+        {
+            ProcessedStuffingPointsCount = 0;
+            AllOfStuffingPointsCount = buffPoints.Length;
+            Vector3[] vertices = new Vector3[buffPoints.Length * prefabPoints.Count];
+            Color[] colors = new Color[buffPoints.Length * prefabPoints.Count];
+            int[] triangles = new int[buffPoints.Length * prefabTriangles.Count];
+
+            Parallel.For(0, buffPoints.Length, options, (i, loopState) =>
+            {
+                try
+                {
+                    for (int k = 0; k < prefabPoints.Count; k++)
+                        vertices[i * prefabPoints.Count + k] = prefabPoints[k] * size + buffPoints[i].point;
+                    for (int k = 0; k < prefabTriangles.Count; k++)
+                        triangles[i * prefabTriangles.Count + k] = prefabTriangles[k] + i * prefabPoints.Count;
+                    for (int k = 0; k < prefabPoints.Count; k++)
+                        colors[i * prefabPoints.Count + k] = buffPoints[i].color;
+
+                    ProcessedStuffingPointsCount++;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                    Debug.LogException(e);
+                    Debug.LogError("Generating cubed mesh stuffs process is Dead!!!!!!!!!!!!!");
+                }
+
+                if (destroyed)
+                {
+                    loopState.Stop();
+                    return;
+                }
+            });
+
+            meshStuffs.Add(new MeshStuff(Vector3.zero, vertices, colors, triangles, new int[0]));
+            ProcessedStuffingChunkCount++;
+        }
     }
 
     // Update is called once per frame
@@ -99,59 +172,31 @@ public class PointsToCube : MonoBehaviour
 
     void GenerateMeshes()
     {
-        Debug.Log("Start generate meshes! / " + points.Count);
-        Mesh[] meshes = new Mesh[points.Count];
+        Debug.Log("Start generate meshes! / " + meshStuffs.Count); ;
+        Mesh[] meshes = new Mesh[meshStuffs.Count];
 
-        for (int i = 0; i < points.Count; i++)
+        for (int i = 0; i < meshStuffs.Count; i++)
         {
-            meshes[i] = _GenerateMeshes(points[i]);
+            meshes[i] = _GenerateMeshes(meshStuffs[i]);
         }
-        Debug.Log("Finished generate" + points.Count + " meshes!");
+        Debug.Log("Finished generate" + meshStuffs.Count + " meshes!");
 
+        meshStuffs.Clear();
         generating = false;
         finish?.Invoke(this, new FinishGeneratingEventArgs(meshes));
     }
 
-    Mesh _GenerateMeshes(CloudPoint[] _points)
+    Mesh _GenerateMeshes(MeshStuff stuff)
     {
         Mesh mesh = new Mesh();
-        Vector3[] vertices = new Vector3[prefabPoints.Length * _points.Length];
-        int[] triangles = new int[prefabTriangles.Length * _points.Length];
-        Color[] colors = new Color[prefabPoints.Length * _points.Length];
-
-        Debug.Log("Process " + _points.Length + " points!");
-
-        for (int i = 0; i < _points.Length; i++)
-        {
-            Array.Copy(GeneratePointedVertex(_points[i].point), 0, vertices, i * prefabPoints.Length, prefabPoints.Length);
-            Array.Copy(prefabTriangles, 0, triangles, i * prefabTriangles.Length, prefabTriangles.Length);
-            Array.Copy(GenerateColor(_points[i].color), 0, colors, i * prefabPoints.Length, prefabPoints.Length);
-        }
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.colors = colors;
-
+        mesh.vertices = (Vector3[])stuff.vertices.Clone();
+        mesh.triangles = (int[])stuff.triangles.Clone();
+        mesh.colors = (Color[])stuff.colors.Clone();
         return mesh;
     }
 
-    Vector3[] GeneratePointedVertex(Vector3 point)
+    private void OnDestroy()
     {
-        Vector3[] pointsBuff = (Vector3[])prefabPoints.Clone();
-        for (int i = 0; i < pointsBuff.Length; i++)
-        {
-            pointsBuff[i] = pointsBuff[i] * size + point;
-        }
-        return pointsBuff;
-    }
-
-    Color[] GenerateColor(Color color)
-    {
-        Color[] colors = new Color[prefabPoints.Length];
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = color;
-        }
-        return colors;
+        destroyed = true;
     }
 }

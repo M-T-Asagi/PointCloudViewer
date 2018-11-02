@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311992, g: 0.38074034, b: 0.35872716, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -296,8 +296,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbf9bc2136d28e84e83d1f82edeb3838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sizeScale: 0.0001
+  sizeScale: 0.001
   maxPointsNumInAnObject: 1000000
+  maxThreadNum: 10
 --- !u!114 &200755975
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -324,6 +325,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cubeSize: 0.1
   filePath: Assets\Resources\PTS\DG_30mm.txt
+  maxThreadNum: 10
+  maxVertexCountInAMesh: 64000
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
   baker: {fileID: 200755975}
@@ -346,6 +349,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  maxThreadNum: 10
 --- !u!114 &200755978
 MonoBehaviour:
   m_ObjectHideFlags: 0
