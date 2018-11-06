@@ -57,11 +57,10 @@ public class PtsToCubingManager : MonoBehaviour
     Dictionary<IndexedVector3, Color> collectedPoints;
     ParallelOptions options;
 
+    List<IndexedVector3> chunkedPointKeys;
     Dictionary<IndexedVector3, List<CenteredPoints>> chunkedPoints;
     List<CenteredMesh> chunkedMeshes;
-
-    List<IndexedVector3> everCubed;
-    Vector3 processingChunkCenter;
+    IndexedVector3 cubingProcessingIndex;
 
     State stateNow = 0;
 
@@ -253,59 +252,97 @@ public class PtsToCubingManager : MonoBehaviour
 
     async void CallSliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
     {
+        stateNow = State.Slicing;
         chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>();
         await Task.Run(() => SliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(_points)));
-        everCubed = new List<IndexedVector3>(chunkedPoints.Keys);
         chunkedMeshes = new List<CenteredMesh>();
         Debug.Log("add arranged " + chunkedPoints.Count + "points!");
+        chunkedPointKeys = new List<IndexedVector3>(chunkedPoints.Keys);
         CallPointsToCube();
     }
 
     void SliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
     {
+        Debug.Log("Slicing process is started.");
         int maxPointsInAMesh = Mathf.FloorToInt((float)maxVertexCountInAMesh / (float)cuber.PrefabMeshesVerticesCount);
         Parallel.ForEach(_points, options, (item, loopState) =>
         {
-            List<CenteredPoints> buffCenteredPoints = new List<CenteredPoints>();
-            for (int i = 0; i < Mathf.FloorToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
+            try
             {
-                CenteredPoints newPoints = new CenteredPoints();
-                newPoints.center = item.Value.center;
-                newPoints.points = new List<CloudPoint>(item.Value.points.GetRange(i * maxPointsInAMesh, Mathf.Min(item.Value.points.Count - i * maxPointsInAMesh, maxPointsInAMesh)));
-                buffCenteredPoints.Add(newPoints);
+                List<CenteredPoints> buffCenteredPoints = new List<CenteredPoints>();
+                for (int i = 0; i < Mathf.FloorToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
+                {
+                    CenteredPoints newPoints = new CenteredPoints();
+                    newPoints.center = item.Value.center;
+                    newPoints.points = new List<CloudPoint>(item.Value.points.GetRange(i * maxPointsInAMesh, Mathf.Min(item.Value.points.Count - i * maxPointsInAMesh, maxPointsInAMesh)));
+                    buffCenteredPoints.Add(newPoints);
+                }
+                chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
+
+                if(destroyed)
+                {
+                    loopState.Stop();
+                    return;
+                }
+            } catch(Exception e)
+            {
+                Debug.LogError(e);
+                Debug.LogException(e);
+                Debug.LogError("Slicing process is Dead!!!!!!!!!!!!!");
             }
-            chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
         });
+        Debug.Log("Slicing process is finished.");
     }
 
     void CallPointsToCube()
     {
         stateNow = State.Cubing;
-        IndexedVector3 process = everCubed[0];
+        CheckAndRemoveZeroItemChunkedPointKey();
+        if (chunkedPointKeys.Count <= 0)
+        {
+            saver.Process(meshesRoot);
+            return;
+        }
+
+        cubingProcessingIndex = chunkedPointKeys[0];
         Debug.Log("---State in cubing!---");
-        Debug.Log("Reaming point nums: " + everCubed.Count);
+        Debug.Log("Reaming point nums: " + chunkedPoints.Count);
         Debug.Log("Processed chunks num: " + chunkedMeshes.Count);
-        Debug.Log("Will process point nums: " + chunkedPoints[process][0].points.Count);
-        Debug.Log("Chunked points center: " + chunkedPoints[process][0].center);
+        Debug.Log("Chunked points center: " + chunkedPoints[cubingProcessingIndex][0].center);
         Debug.Log("-----------------------");
-        processingChunkCenter = chunkedPoints[process][0].center;
-        cuber.Process(chunkedPoints[process][0].points.ToArray(), cubeSize);
-        chunkedPoints[process].RemoveAt(0);
-        if (chunkedPoints[process].Count == 0)
-            everCubed.RemoveAt(0);
+
+        cuber.Process(chunkedPoints[cubingProcessingIndex][0].points.ToArray(), cubeSize);
+    }
+
+    void CheckAndRemoveZeroItemChunkedPointKey()
+    {
+        Debug.Log("Start removing chunked point keys.");
+        while(true)
+        {
+            Debug.Log("loop.");
+            if (chunkedPointKeys.Count <= 0)
+                break;
+
+            if (chunkedPoints[chunkedPointKeys[0]].Count > 0)
+                break;
+
+            chunkedPointKeys.RemoveAt(0);
+        }
+        Debug.Log("Finish removing chunked point keys.");
     }
 
     void CubingProcessUp(object sender, PointsToCube.FinishGeneratingEventArgs args)
     {
         Debug.Log("Cubing process up!");
-        center += processingChunkCenter;
+        center += chunkedPoints[cubingProcessingIndex][0].center;
+        chunkedMeshes.Add(new CenteredMesh(args.generatedMeshes[0], chunkedPoints[cubingProcessingIndex][0].center));
         bakeCount++;
 
-        chunkedMeshes.Add(new CenteredMesh(args.generatedMeshes[0], processingChunkCenter));
-        if (everCubed.Count > 0)
-            CallPointsToCube();
-        else
+        chunkedPoints[cubingProcessingIndex].RemoveAt(0);
+        if (chunkedPoints[cubingProcessingIndex].Count <= 0)
             CallMeshBake();
+        else
+            CallPointsToCube();
     }
 
     void CallMeshBake()
@@ -323,7 +360,10 @@ public class PtsToCubingManager : MonoBehaviour
         chunkedMeshesManager.chunkSize = arranger.ChunkSize;
         chunkedMeshesManager.chunksParent = meshesRoot;
 
-        saver.Process(meshesRoot);
+        IndexedGameObjects objects = new IndexedGameObjects();
+        objects.Update(cubingProcessingIndex, new List<GameObject>(args.gameObjects));
+        chunkedMeshesManager.indexedObjects = objects;
+        CallPointsToCube();
     }
 
     void MeshesSaved(object sender, EventArgs args)
