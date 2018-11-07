@@ -45,16 +45,3 @@ public struct MeshStuff
         indeces = (int[])_indeces.Clone();
     }
 }
-
-[System.Serializable]
-public struct IndexedObjects
-{
-    public IndexedVector3 index;
-    public GameObject[] gameObjects;
-
-    public IndexedObjects(IndexedVector3 _index, GameObject[] _gameObjects)
-    {
-        index = new IndexedVector3(_index.x, _index.y, _index.z);
-        gameObjects = (GameObject[])_gameObjects.Clone();
-    }
-}

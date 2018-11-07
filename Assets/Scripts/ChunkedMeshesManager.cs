@@ -6,21 +6,10 @@ public class ChunkedMeshesManager : MonoBehaviour
 {
     public float chunkSize;
     public GameObject chunksParent;
-    Dictionary<IndexedVector3, GameObject> chunkedObject;
+    public IndexedGameObjects indexedObjects;
 
     private void Start()
     {
-        chunkedObject = new Dictionary<IndexedVector3, GameObject>();
-
-        foreach (Transform child in chunksParent.transform)
-        {
-            chunkedObject.Add(
-                new IndexedVector3(
-                    Mathf.RoundToInt(child.position.x / chunkSize),
-                    Mathf.RoundToInt(child.position.y / chunkSize),
-                    Mathf.RoundToInt(child.position.z / chunkSize)),
-                child.gameObject);
-        }
     }
 
     public List<GameObject> GetChunkedObjectRange(IndexedVector3 lower, IndexedVector3 higher)
@@ -39,8 +28,11 @@ public class ChunkedMeshesManager : MonoBehaviour
                 for (int _z = 0; _z < higher.z - lower.z; _z++)
                 {
                     IndexedVector3 index = new IndexedVector3(_x + lower.x, _y + lower.y, _z + lower.z);
-                    if (chunkedObject.ContainsKey(index))
-                        returner.Add(chunkedObject[index]);
+                    if (indexedObjects.GetTable().ContainsKey(index))
+                    {
+                        List<GameObject> objectBuffs = new List<GameObject>(indexedObjects.GetTable()[index]);
+                        returner.AddRange(objectBuffs);
+                    }
                 }
             }
         }
