@@ -13,18 +13,18 @@ namespace Serialize
     /// テーブルの管理クラス
     /// </summary>
     [System.Serializable]
-    public class TableBase<TKey, TValue, Type> where Type : KeyAndValue<TKey, TValue>
+    public class TableBase<TKey, TValue, TKaV> where TKaV : KeyAndValue<TKey, TValue>
     {
         [SerializeField]
-        private List<Type> list;
+        private List<TKaV> list;
         private Dictionary<TKey, TValue> table;
 
-        public TableBase(List<Type> _list = null)
+        public TableBase(List<TKaV> _list = null)
         {
             if (_list != null)
-                list = new List<Type>(_list);
+                list = new List<TKaV>(_list);
             else
-                list = new List<Type>();
+                list = new List<TKaV>();
         }
 
         public Dictionary<TKey, TValue> GetTable()
@@ -39,7 +39,7 @@ namespace Serialize
         /// <summary>
         /// Editor Only
         /// </summary>
-        public List<Type> GetList()
+        public List<TKaV> GetList()
         {
             return list;
         }
@@ -51,7 +51,7 @@ namespace Serialize
             {
                 // TODO: fix it 
                 // InvalidCastException: Specified cast is not valid.
-                list.Add((Type)new KeyAndValue<TKey, TValue>(key, value));
+                list.Add(ConvertValueWithKeyToKeyAndValue(key, value));
             }
             else
             {
@@ -61,7 +61,15 @@ namespace Serialize
             }
         }
 
-        static Dictionary<TKey, TValue> ConvertListToDictionary(List<Type> list)
+        public static TKaV ConvertValueWithKeyToKeyAndValue(TKey key, TValue value)
+        {
+            TKaV item = (TKaV)typeof(TKaV).GetConstructor(new System.Type[] { typeof(TKey), typeof(TValue) }).Invoke(new object[] { key, value });
+            item.Key = key;
+            item.Value = value;
+            return item;
+        }
+
+        static Dictionary<TKey, TValue> ConvertListToDictionary(List<TKaV> list)
         {
             Dictionary<TKey, TValue> dic = new Dictionary<TKey, TValue>();
             foreach (KeyAndValue<TKey, TValue> pair in list)
@@ -71,12 +79,12 @@ namespace Serialize
             return dic;
         }
 
-        static List<Type> ConvertDictionaryToList(Dictionary<TKey, TValue> dict)
+        static List<TKaV> ConvertDictionaryToList(Dictionary<TKey, TValue> dict)
         {
-            List<Type> list = new List<Type>();
-            foreach(KeyValuePair<TKey, TValue> kvp in dict)
+            List<TKaV> list = new List<TKaV>();
+            foreach (KeyValuePair<TKey, TValue> kvp in dict)
             {
-                list.Add((Type)new KeyAndValue<TKey, TValue>(kvp.Key, kvp.Value));
+                list.Add(ConvertValueWithKeyToKeyAndValue(kvp.Key, kvp.Value));
             }
             return list;
         }
@@ -101,7 +109,5 @@ namespace Serialize
             Key = pair.Key;
             Value = pair.Value;
         }
-
-
     }
 }

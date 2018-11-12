@@ -87,12 +87,18 @@ public class PtsToCubingManager : MonoBehaviour
         meshesRoot.transform.parent = transform;
         baker.SetUp(meshesRoot.transform);
 
+        ChunkedMeshesManager chunkedMeshesManager = meshesRoot.AddComponent<ChunkedMeshesManager>();
+        chunkedMeshesManager.chunkSize = arranger.ChunkSize;
+        chunkedMeshesManager.chunksParent = meshesRoot;
+        chunkedMeshesManager.indexedObjects = new IndexedGameObjects();
+
         converter.processUp += ProcessUp;
         converter.allProcessUp += AllProcessUp;
         arranger.finishArranging += ArrangingProcessUp;
         arranger.finishProcess += ChunkingProcessUp;
         cuber.finish += CubingProcessUp;
         baker.finishBaking += MeshesBaked;
+        saver.finishSaving += MeshesSaved;
 
         CallConverterProcess();
     }
@@ -253,7 +259,6 @@ public class PtsToCubingManager : MonoBehaviour
     async void CallSliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
     {
         stateNow = State.Slicing;
-        chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>();
         await Task.Run(() => SliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(_points)));
         chunkedMeshes = new List<CenteredMesh>();
         Debug.Log("add arranged " + chunkedPoints.Count + "points!");
@@ -264,7 +269,10 @@ public class PtsToCubingManager : MonoBehaviour
     void SliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
     {
         Debug.Log("Slicing process is started.");
+        chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>();
         int maxPointsInAMesh = Mathf.FloorToInt((float)maxVertexCountInAMesh / (float)cuber.PrefabMeshesVerticesCount);
+        subAll = maxPointsInAMesh;
+        subCount = 0;
         Parallel.ForEach(_points, options, (item, loopState) =>
         {
             try
@@ -276,17 +284,20 @@ public class PtsToCubingManager : MonoBehaviour
                     newPoints.center = item.Value.center;
                     newPoints.points = new List<CloudPoint>(item.Value.points.GetRange(i * maxPointsInAMesh, Mathf.Min(item.Value.points.Count - i * maxPointsInAMesh, maxPointsInAMesh)));
                     buffCenteredPoints.Add(newPoints);
+                    subCount++;
                 }
-                chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
 
-                if(destroyed)
+                if (buffCenteredPoints.Count > 0)
+                    chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
+
+                if (destroyed)
                 {
                     loopState.Stop();
                     return;
                 }
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
-                Debug.LogError(e);
                 Debug.LogException(e);
                 Debug.LogError("Slicing process is Dead!!!!!!!!!!!!!");
             }
@@ -317,16 +328,18 @@ public class PtsToCubingManager : MonoBehaviour
     void CheckAndRemoveZeroItemChunkedPointKey()
     {
         Debug.Log("Start removing chunked point keys.");
-        while(true)
+        while (true)
         {
             Debug.Log("loop.");
-            if (chunkedPointKeys.Count <= 0)
+            if (chunkedPointKeys.Count <= 0 || chunkedPoints[chunkedPointKeys[0]].Count > 0)
+            {
+                Debug.Log("loop break!");
                 break;
+            }
 
-            if (chunkedPoints[chunkedPointKeys[0]].Count > 0)
-                break;
-
+            Debug.Log("not breaked.");
             chunkedPointKeys.RemoveAt(0);
+            Debug.Log("loop while!");
         }
         Debug.Log("Finish removing chunked point keys.");
     }
@@ -356,13 +369,10 @@ public class PtsToCubingManager : MonoBehaviour
     {
         stateNow = State.Saving;
 
-        ChunkedMeshesManager chunkedMeshesManager = meshesRoot.AddComponent<ChunkedMeshesManager>();
-        chunkedMeshesManager.chunkSize = arranger.ChunkSize;
-        chunkedMeshesManager.chunksParent = meshesRoot;
+        chunkedMeshes.Clear();
 
-        IndexedGameObjects objects = new IndexedGameObjects();
-        objects.Update(cubingProcessingIndex, new List<GameObject>(args.gameObjects));
-        chunkedMeshesManager.indexedObjects = objects;
+        ChunkedMeshesManager chunkedMeshesManager = meshesRoot.GetComponent<ChunkedMeshesManager>();
+        chunkedMeshesManager.indexedObjects.Update(cubingProcessingIndex, new List<GameObject>(args.gameObjects));
         CallPointsToCube();
     }
 
@@ -397,6 +407,10 @@ public class PtsToCubingManager : MonoBehaviour
             case State.Arranging:
                 pbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
                 pbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
+                break;
+            case State.Slicing:
+                pbManager.UpdateState((float)subCount / (float)subAll);
+                pbManager.UpdateStateText(subCount + " /\n" + subAll);
                 break;
             case State.Chunking:
                 pbManager.UpdateState((float)arranger.ProcessedChunkedCount / (float)arranger.AllChunkCount);
