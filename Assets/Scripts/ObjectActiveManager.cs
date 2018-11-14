@@ -20,7 +20,7 @@ public class ObjectActiveManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (target.activeSelf != active)
+        if (target != null && target.activeSelf != active)
         {
             target.SetActive(active);
         }

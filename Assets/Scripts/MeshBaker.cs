@@ -38,10 +38,6 @@ public class MeshBaker : MonoBehaviour
     bool bake = false;
     bool destroyed = false;
 
-    Vector3? center = null;
-
-    public Vector3 Center { get { return center.Value; } set { center = value; } }
-
     ParallelOptions options;
     Transform meshesRoot = null;
 
@@ -70,8 +66,6 @@ public class MeshBaker : MonoBehaviour
         if (_root)
         {
             meshesRoot = _root;
-            meshesRoot.localPosition = Vector3.zero;
-            meshesRoot.localRotation = Quaternion.identity;
         }
 
         options = new ParallelOptions();
@@ -185,8 +179,6 @@ public class MeshBaker : MonoBehaviour
             child.GetComponent<MeshFilter>().sharedMesh = meshes[i].mesh;
             objects.Add(child);
         }
-        if (center.HasValue)
-            meshesRoot.position -= center.Value;
 
         meshes = null;
         finishBaking?.Invoke(this, new FinishBakingArgs(objects));

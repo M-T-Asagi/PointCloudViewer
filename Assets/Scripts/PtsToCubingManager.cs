@@ -288,7 +288,8 @@ public class PtsToCubingManager : MonoBehaviour
                 }
 
                 if (buffCenteredPoints.Count > 0)
-                    chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
+                    lock (Thread.CurrentContext)
+                        chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
 
                 if (destroyed)
                 {
@@ -311,6 +312,7 @@ public class PtsToCubingManager : MonoBehaviour
         CheckAndRemoveZeroItemChunkedPointKey();
         if (chunkedPointKeys.Count <= 0)
         {
+            meshesRoot.transform.position = -(center / (float)bakeCount);
             saver.Process(meshesRoot);
             return;
         }
@@ -327,21 +329,17 @@ public class PtsToCubingManager : MonoBehaviour
 
     void CheckAndRemoveZeroItemChunkedPointKey()
     {
-        Debug.Log("Start removing chunked point keys.");
-        while (true)
+        Debug.Log("CheckAndRemoveZeroItemChunkedPointKey is called.");
+        if (chunkedPointKeys.Count <= 0 || chunkedPoints[chunkedPointKeys[0]].Count > 0)
         {
-            Debug.Log("loop.");
-            if (chunkedPointKeys.Count <= 0 || chunkedPoints[chunkedPointKeys[0]].Count > 0)
-            {
-                Debug.Log("loop break!");
-                break;
-            }
-
-            Debug.Log("not breaked.");
-            chunkedPointKeys.RemoveAt(0);
-            Debug.Log("loop while!");
+            Debug.Log("return from CheckAndRemoveZeroItemChunkedPointKey.");
+            return;
         }
-        Debug.Log("Finish removing chunked point keys.");
+        else
+        {
+            chunkedPointKeys.RemoveAt(0);
+            CheckAndRemoveZeroItemChunkedPointKey();
+        }
     }
 
     void CubingProcessUp(object sender, PointsToCube.FinishGeneratingEventArgs args)
@@ -361,7 +359,6 @@ public class PtsToCubingManager : MonoBehaviour
     void CallMeshBake()
     {
         Debug.Log("Bake the mesh!");
-        baker.Center = center / (float)bakeCount;
         baker.SetMeshToBake(chunkedMeshes);
     }
 

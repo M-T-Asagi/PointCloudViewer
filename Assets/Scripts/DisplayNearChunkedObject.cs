@@ -15,30 +15,29 @@ public class DisplayNearChunkedObject : MonoBehaviour
 
     float chunkSize;
     int chunkedDisplayDistance;
-    IndexedVector3 position;
-    IndexedVector3 lower;
-    IndexedVector3 higher;
     List<GameObject> lastDisplayed;
 
     private void Start()
     {
         chunkSize = chunkedMeshesManager.chunkSize;
         chunkedDisplayDistance = Mathf.FloorToInt(displayDistance / chunkSize);
-        position = new IndexedVector3(0, 0, 0);
-        lower = new IndexedVector3(0, 0, 0);
-        higher = new IndexedVector3(0, 0, 0);
         lastDisplayed = new List<GameObject>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        IndexedVector3 position = new IndexedVector3(0, 0, 0);
         position.x = Mathf.FloorToInt(eye.position.x / chunkSize);
         position.y = Mathf.FloorToInt(eye.position.y / chunkSize);
         position.z = Mathf.FloorToInt(eye.position.z / chunkSize);
+
+        IndexedVector3 lower = new IndexedVector3(0, 0, 0);
         lower.x = position.x - chunkedDisplayDistance;
         lower.y = position.y - chunkedDisplayDistance;
         lower.z = position.z - chunkedDisplayDistance;
+
+        IndexedVector3 higher = new IndexedVector3(0, 0, 0);
         higher.x = position.x + chunkedDisplayDistance;
         higher.y = position.y + chunkedDisplayDistance;
         higher.z = position.z + chunkedDisplayDistance;
