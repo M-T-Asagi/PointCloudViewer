@@ -19,6 +19,7 @@ public class PtsToCubingManager : MonoBehaviour
         Cubing,
         Generating,
         Baking,
+        Transforming,
         Saving,
 
         ItemNum
@@ -277,8 +278,9 @@ public class PtsToCubingManager : MonoBehaviour
         {
             try
             {
+                Debug.Log("foring " + item.Value.points.Count + " points to " + Mathf.CeilToInt((float)item.Value.points.Count / (float)maxPointsInAMesh) + "objects(an object contains " + maxPointsInAMesh + " points).");
                 List<CenteredPoints> buffCenteredPoints = new List<CenteredPoints>();
-                for (int i = 0; i < Mathf.FloorToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
+                for (int i = 0; i < Mathf.CeilToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
                 {
                     CenteredPoints newPoints = new CenteredPoints();
                     newPoints.center = item.Value.center;
@@ -312,8 +314,7 @@ public class PtsToCubingManager : MonoBehaviour
         CheckAndRemoveZeroItemChunkedPointKey();
         if (chunkedPointKeys.Count <= 0)
         {
-            meshesRoot.transform.position = -(center / (float)bakeCount);
-            saver.Process(meshesRoot);
+            stateNow = State.Transforming;
             return;
         }
 
@@ -382,6 +383,13 @@ public class PtsToCubingManager : MonoBehaviour
     void Update()
     {
         stateText.text = "State now:\n    " + stateNow.ToString();
+        if (stateNow == State.Transforming)
+        {
+            meshesRoot.transform.position = -(center / (float)bakeCount);
+            stateNow = State.Saving;
+            saver.Process(meshesRoot);
+        }
+
         UpdateMainProgressBar();
         UpdateSubProgressbar();
     }

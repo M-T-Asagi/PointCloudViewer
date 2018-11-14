@@ -221,21 +221,22 @@ public class PointsArranger : MonoBehaviour
                     return;
                 }
             });
-            _center /= (float)item.Value.Count;
 
+            _center /= (float)item.Value.Count;
+            List<CloudPoint> newPoints = new List<CloudPoint>();
             ProcessedPointCount = 0;
+
             Parallel.For(0, item.Value.Count, options, (i, loopState) =>
             {
                 try
                 {
-                    CloudPoint _buffPoint = item.Value[i];
-                    _buffPoint.point -= _center;
-                    item.Value[i] = _buffPoint;
+                    lock (Thread.CurrentContext)
+                        newPoints.Add(new CloudPoint(item.Value[i].point - _center, item.Value[i].intensity, item.Value[i].color));
+
                     ProcessedPointCount++;
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e);
                     Debug.LogException(e);
                     Debug.LogError("Cetering process in chunking process is Dead!!!!!!!!!!!!!");
                 }
@@ -247,13 +248,11 @@ public class PointsArranger : MonoBehaviour
                 }
             });
 
-            List<CloudPoint> _points = new List<CloudPoint>(item.Value);
-            chunkedPoints.Add(item.Key, new CenteredPoints(_points, _center));
-
+            chunkedPoints.Add(item.Key, new CenteredPoints(newPoints, _center));
             ProcessedChunkedCount++;
         }
 
-        Debug.Log("Finish one of processes.");
+        Debug.Log("Finish arranging to " + chunkedPoints.Count + " processes.");
         finishProcess?.Invoke(this, new FinishProcessArgs(chunkedPoints));
     }
 
