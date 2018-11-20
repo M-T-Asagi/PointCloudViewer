@@ -196,42 +196,23 @@ public class PointsArranger : MonoBehaviour
         Dictionary<IndexedVector3, CenteredPoints> chunkedPoints = new Dictionary<IndexedVector3, CenteredPoints>();
         foreach (KeyValuePair<IndexedVector3, List<CloudPoint>> item in arrangedPoints)
         {
-            Vector3 _center = Vector3.zero;
-
             ProcessedPointCount = 0;
             AllPointCount = item.Value.Count;
-            Parallel.For(0, item.Value.Count, options, (i, loopState) =>
-            {
-                try
-                {
-                    _center += item.Value[i].point;
-                    ProcessedPointCount++;
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e);
-                    Debug.LogException(e);
-                    Debug.LogError("Calucuation center process in chunking process is Dead!!!!!!!!!!!!!");
-                }
 
-
-                if (destroyed)
-                {
-                    loopState.Stop();
-                    return;
-                }
-            });
-
-            _center /= (float)item.Value.Count;
+            Vector3 _center = item.Key.ToVector3() * chunkSize;
+            Debug.Log("Chunking center is : " + _center.ToString());
             List<CloudPoint> newPoints = new List<CloudPoint>();
-            ProcessedPointCount = 0;
 
             Parallel.For(0, item.Value.Count, options, (i, loopState) =>
             {
                 try
                 {
+                    Vector3 newPoint = item.Value[i].point - _center;
                     lock (Thread.CurrentContext)
-                        newPoints.Add(new CloudPoint(item.Value[i].point - _center, item.Value[i].intensity, item.Value[i].color));
+                        newPoints.Add(new CloudPoint(newPoint, item.Value[i].intensity, item.Value[i].color));
+
+                    if (Mathf.Abs(newPoint.x) > ChunkSize / 2f || Mathf.Abs(newPoint.y) > ChunkSize / 2f || Mathf.Abs(newPoint.z) > ChunkSize / 2f)
+                        Debug.Log("point in over chunk size! " + newPoint.ToString());
 
                     ProcessedPointCount++;
                 }
