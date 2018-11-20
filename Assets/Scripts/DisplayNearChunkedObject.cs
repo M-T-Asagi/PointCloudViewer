@@ -13,12 +13,14 @@ public class DisplayNearChunkedObject : MonoBehaviour
     [SerializeField]
     Transform eye;
 
+    Transform thisTransform;
     float chunkSize;
     int chunkedDisplayDistance;
     List<GameObject> lastDisplayed;
 
     private void Start()
     {
+        thisTransform = transform;
         chunkSize = chunkedMeshesManager.chunkSize;
         chunkedDisplayDistance = Mathf.FloorToInt(displayDistance / chunkSize);
         lastDisplayed = new List<GameObject>();
@@ -27,20 +29,21 @@ public class DisplayNearChunkedObject : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        IndexedVector3 position = new IndexedVector3(0, 0, 0);
-        position.x = Mathf.FloorToInt(eye.position.x / chunkSize);
-        position.y = Mathf.FloorToInt(eye.position.y / chunkSize);
-        position.z = Mathf.FloorToInt(eye.position.z / chunkSize);
+        Vector3 inversedPosition = thisTransform.InverseTransformPoint(eye.position);
+        IndexedVector3 indexedPosition = new IndexedVector3(0, 0, 0);
+        indexedPosition.x = Mathf.FloorToInt(inversedPosition.x / chunkSize);
+        indexedPosition.y = Mathf.FloorToInt(inversedPosition.y / chunkSize);
+        indexedPosition.z = Mathf.FloorToInt(inversedPosition.z / chunkSize);
 
         IndexedVector3 lower = new IndexedVector3(0, 0, 0);
-        lower.x = position.x - chunkedDisplayDistance;
-        lower.y = position.y - chunkedDisplayDistance;
-        lower.z = position.z - chunkedDisplayDistance;
+        lower.x = indexedPosition.x - chunkedDisplayDistance;
+        lower.y = indexedPosition.y - chunkedDisplayDistance;
+        lower.z = indexedPosition.z - chunkedDisplayDistance;
 
         IndexedVector3 higher = new IndexedVector3(0, 0, 0);
-        higher.x = position.x + chunkedDisplayDistance;
-        higher.y = position.y + chunkedDisplayDistance;
-        higher.z = position.z + chunkedDisplayDistance;
+        higher.x = indexedPosition.x + chunkedDisplayDistance;
+        higher.y = indexedPosition.y + chunkedDisplayDistance;
+        higher.z = indexedPosition.z + chunkedDisplayDistance;
 
         List<GameObject> displayedObject = chunkedMeshesManager.GetChunkedObjectRange(lower, higher);
 
