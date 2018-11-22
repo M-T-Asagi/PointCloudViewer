@@ -106,8 +106,8 @@ public class PtsToCubingManager : MonoBehaviour
 
     void CallConverterProcess()
     {
-        converter.Process();
         stateNow = State.Converting;
+        converter.Process();
     }
 
     void ProcessUp(object sender, PtsToCloudPointConverter.ProcessUpArgs args)
@@ -117,12 +117,11 @@ public class PtsToCubingManager : MonoBehaviour
 
     async void CallCollecting(CloudPoint[] _points)
     {
+        stateNow = State.Collecting;
         CloudPoint[] points = (CloudPoint[])_points.Clone();
 
         subCount = 0;
         subAll = points.Length;
-
-        stateNow = State.Collecting;
 
         await Task.Run(() => Collecting(points));
         CallConverterProcess();

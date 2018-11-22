@@ -299,6 +299,10 @@ MonoBehaviour:
   sizeScale: 0.001
   maxPointsNumInAnObject: 1000000
   maxThreadNum: 10
+  axis:
+    x: 0
+    y: 1
+    z: 2
 --- !u!114 &200755975
 MonoBehaviour:
   m_ObjectHideFlags: 0

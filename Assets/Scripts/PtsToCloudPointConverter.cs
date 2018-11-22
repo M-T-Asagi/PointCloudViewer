@@ -6,6 +6,26 @@ using System.Threading.Tasks;
 
 public class PtsToCloudPointConverter : MonoBehaviour
 {
+    [Serializable]
+    public class Axis3
+    {
+        public Axis x = Axis.X;
+        public Axis y = Axis.Y;
+        public Axis z = Axis.Z;
+    }
+
+    public enum Axis
+    {
+        X = 0,
+        Y,
+        Z,
+        minusX,
+        minusY,
+        minusZ,
+
+        itemCount
+    }
+
     public class AllProcessUpArgs : EventArgs
     {
     }
@@ -26,6 +46,8 @@ public class PtsToCloudPointConverter : MonoBehaviour
     int maxPointsNumInAnObject = 300000;
     [SerializeField]
     int maxThreadNum = 4;
+    [SerializeField]
+    Axis3 axis;
 
     int totalPointCount = -1;
     public int TotalPointCount { get { return totalPointCount; } }
