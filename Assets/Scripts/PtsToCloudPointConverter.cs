@@ -133,11 +133,11 @@ public class PtsToCloudPointConverter : MonoBehaviour
                 {
                     string[] data = _read.Split(' ');
                     points[i] = new CloudPoint(
-                        new Vector3(
+                        PointConvertWithAxis(new Vector3(
                             float.Parse(data[0]) * sizeScale,
                             float.Parse(data[1]) * sizeScale,
                             float.Parse(data[2]) * sizeScale
-                        ),
+                        )),
                         Int32.Parse(data[3]),
                         new Color(
                             float.Parse(data[4]) / 255f,
@@ -166,6 +166,79 @@ public class PtsToCloudPointConverter : MonoBehaviour
         Debug.Log("process up! : " + currentCount + "/" + points.Length);
         processUp?.Invoke(this, new ProcessUpArgs(points));
         processedSectionCount++;
+    }
+
+    Vector3 PointConvertWithAxis(Vector3 _point)
+    {
+        Vector3 point = new Vector3();
+
+        switch (axis.x)
+        {
+            case Axis.minusX:
+                point.x = -_point.x;
+                break;
+            case Axis.Y:
+                point.x = _point.y;
+                break;
+            case Axis.minusY:
+                point.x = -_point.y;
+                break;
+            case Axis.Z:
+                point.x = _point.z;
+                break;
+            case Axis.minusZ:
+                point.x = -_point.z;
+                break;
+            default:
+                point.x = _point.x;
+                break;
+        }
+
+        switch (axis.y)
+        {
+            case Axis.X:
+                point.y = _point.x;
+                break;
+            case Axis.minusX:
+                point.y = -_point.x;
+                break;
+            case Axis.minusY:
+                point.y = -_point.y;
+                break;
+            case Axis.Z:
+                point.y = _point.z;
+                break;
+            case Axis.minusZ:
+                point.y = -_point.z;
+                break;
+            default:
+                point.y = _point.y;
+                break;
+        }
+
+        switch (axis.z)
+        {
+            case Axis.X:
+                point.z = _point.x;
+                break;
+            case Axis.minusX:
+                point.z = -_point.x;
+                break;
+            case Axis.Y:
+                point.z = _point.y;
+                break;
+            case Axis.minusY:
+                point.z = -_point.y;
+                break;
+            case Axis.minusZ:
+                point.z = -_point.z;
+                break;
+            default:
+                point.z = _point.z;
+                break;
+        }
+
+        return point;
     }
 
     void Cleanup()
