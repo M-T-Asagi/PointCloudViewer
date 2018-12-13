@@ -29,7 +29,8 @@ public class PointsToCube : MonoBehaviour
     public int ProcessedStuffingPointsCount { get; private set; }
     public int AllOfStuffingPointsCount { get; private set; }
 
-    public int PrefabMeshesVerticesCount { get { return mesh.vertexCount; } }
+    int prefabMeshesVerticesCount;
+    public int PrefabMeshesVerticesCount { get { return prefabMeshesVerticesCount; } }
 
     List<Vector3> prefabPoints;
     List<int> prefabTriangles;
@@ -47,6 +48,8 @@ public class PointsToCube : MonoBehaviour
         GeneratePrefavPoints();
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = maxThreadNum;
+
+        prefabMeshesVerticesCount = mesh.vertexCount;
 
         ProcessedStuffingChunkCount = 0;
         AllChunkCount = 0;

@@ -29,6 +29,8 @@ public class MeshSaver : MonoBehaviour
     {
         int childCount = objectRoot.transform.childCount;
         targetMeshes = new Mesh[childCount];
+        Debug.Log("Process saving " + childCount + "meshes");
+
         for (int i = 0; i < childCount; i++)
         {
             targetMeshes[i] = objectRoot.transform.GetChild(i).gameObject.GetComponent<MeshFilter>().mesh;
@@ -71,14 +73,13 @@ public class MeshSaver : MonoBehaviour
 
     void SaveMeshAll()
     {
-        int count = 0;
-
-        foreach (Mesh mesh in targetMeshes)
+        for (int i = 0; i < targetMeshes.Length; i++)
         {
-            AssetDatabase.CreateAsset(mesh, path + "/mesh-" + count + ".asset");
+            Mesh mesh = targetMeshes[i];
+            AssetDatabase.CreateAsset(mesh, path + "/mesh-" + i + ".asset");
             AssetDatabase.SaveAssets();
-            count++;
         }
+        Debug.Log("Finish saving " + targetMeshes.Length + "meshes");
     }
 
     void SavePrefabToAsset()

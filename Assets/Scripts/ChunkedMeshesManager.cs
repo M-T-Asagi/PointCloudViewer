@@ -6,22 +6,7 @@ public class ChunkedMeshesManager : MonoBehaviour
 {
     public float chunkSize;
     public GameObject chunksParent;
-    Dictionary<IndexedVector3, GameObject> chunkedObject;
-
-    private void Start()
-    {
-        chunkedObject = new Dictionary<IndexedVector3, GameObject>();
-
-        foreach (Transform child in chunksParent.transform)
-        {
-            chunkedObject.Add(
-                new IndexedVector3(
-                    Mathf.RoundToInt(child.position.x / chunkSize),
-                    Mathf.RoundToInt(child.position.y / chunkSize),
-                    Mathf.RoundToInt(child.position.z / chunkSize)),
-                child.gameObject);
-        }
-    }
+    public IndexedGameObjects indexedObjects;
 
     public List<GameObject> GetChunkedObjectRange(IndexedVector3 lower, IndexedVector3 higher)
     {
@@ -32,15 +17,18 @@ public class ChunkedMeshesManager : MonoBehaviour
         else if (higher.x < lower.x || higher.y < lower.y || higher.z < lower.z)
             throw new System.Exception("Cannot set higher params under lower params.");
 
-        for (int _x = 0; _x < higher.x - lower.x; _x++)
+        for (int x = lower.x; x <= higher.x; x++)
         {
-            for (int _y = 0; _y < higher.y - lower.y; _y++)
+            for (int y = lower.y; y <= higher.y; y++)
             {
-                for (int _z = 0; _z < higher.z - lower.z; _z++)
+                for (int z = lower.z; z <= higher.z; z++)
                 {
-                    IndexedVector3 index = new IndexedVector3(_x + lower.x, _y + lower.y, _z + lower.z);
-                    if (chunkedObject.ContainsKey(index))
-                        returner.Add(chunkedObject[index]);
+                    IndexedVector3 index = new IndexedVector3(x, y, z);
+                    if (indexedObjects.GetTable().ContainsKey(index))
+                    {
+                        List<GameObject> objectBuffs = new List<GameObject>(indexedObjects.GetTable()[index]);
+                        returner.AddRange(objectBuffs);
+                    }
                 }
             }
         }

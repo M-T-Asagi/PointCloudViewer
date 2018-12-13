@@ -8,6 +8,12 @@ public class MeshBaker : MonoBehaviour
 {
     public class FinishBakingArgs : EventArgs
     {
+        public List<GameObject> gameObjects;
+
+        public FinishBakingArgs(List<GameObject> _gameObjects)
+        {
+            gameObjects = new List<GameObject>(_gameObjects);
+        }
     }
 
     public class FinishGenerateArgs : EventArgs
@@ -31,10 +37,6 @@ public class MeshBaker : MonoBehaviour
     bool generate = false;
     bool bake = false;
     bool destroyed = false;
-
-    Vector3? center = null;
-
-    public Vector3 Center { get { return center.Value; } set { center = value; } }
 
     ParallelOptions options;
     Transform meshesRoot = null;
@@ -64,8 +66,6 @@ public class MeshBaker : MonoBehaviour
         if (_root)
         {
             meshesRoot = _root;
-            meshesRoot.localPosition = Vector3.zero;
-            meshesRoot.localRotation = Quaternion.identity;
         }
 
         options = new ParallelOptions();
@@ -161,6 +161,7 @@ public class MeshBaker : MonoBehaviour
 
     private void BakingMeshToNewObject()
     {
+        List<GameObject> objects = new List<GameObject>();
         for (int i = 0; i < meshes.Count; i++)
         {
             GameObject child;
@@ -176,12 +177,11 @@ public class MeshBaker : MonoBehaviour
             }
 
             child.GetComponent<MeshFilter>().sharedMesh = meshes[i].mesh;
+            objects.Add(child);
         }
-        if (center.HasValue)
-            meshesRoot.position -= center.Value;
 
         meshes = null;
-        finishBaking?.Invoke(this, new FinishBakingArgs());
+        finishBaking?.Invoke(this, new FinishBakingArgs(objects));
     }
 
     private void OnDestroy()
