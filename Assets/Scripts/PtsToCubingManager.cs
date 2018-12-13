@@ -38,6 +38,8 @@ public class PtsToCubingManager : MonoBehaviour
     [SerializeField]
     PointsArranger arranger;
     [SerializeField]
+    PointsSlicer slicer;
+    [SerializeField]
     MeshBaker baker;
     [SerializeField]
     MeshSaver saver;
@@ -97,6 +99,7 @@ public class PtsToCubingManager : MonoBehaviour
         converter.allProcessUp += AllProcessUp;
         arranger.finishArranging += ArrangingProcessUp;
         arranger.finishProcess += ChunkingProcessUp;
+        slicer.finishProcess += SlicerProcessUp;
         cuber.finish += CubingProcessUp;
         baker.finishBaking += MeshesBaked;
         saver.finishSaving += MeshesSaved;
@@ -253,58 +256,22 @@ public class PtsToCubingManager : MonoBehaviour
 
     void ChunkingProcessUp(object sender, PointsArranger.FinishProcessArgs args)
     {
-        CallSliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(args.chunkedPoints));
+        CallSlicingProcess(new Dictionary<IndexedVector3, CenteredPoints>(args.chunkedPoints));
     }
 
-    async void CallSliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
+    void CallSlicingProcess(Dictionary<IndexedVector3, CenteredPoints> points)
     {
         stateNow = State.Slicing;
-        await Task.Run(() => SliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(_points)));
+        slicer.Process(points, points.Values.Count);
+    }
+
+    void SlicerProcessUp(object sender, PointsSlicer.FinishSlicingEventArgs args)
+    {
         chunkedMeshes = new List<CenteredMesh>();
+        chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>(args.points);
         Debug.Log("add arranged " + chunkedPoints.Count + "points!");
         chunkedPointKeys = new List<IndexedVector3>(chunkedPoints.Keys);
         CallPointsToCube();
-    }
-
-    void SliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points)
-    {
-        Debug.Log("Slicing process is started.");
-        chunkedPoints = new Dictionary<IndexedVector3, List<CenteredPoints>>();
-        int maxPointsInAMesh = Mathf.FloorToInt((float)maxVertexCountInAMesh / (float)cuber.PrefabMeshesVerticesCount);
-        subAll = maxPointsInAMesh;
-        subCount = 0;
-        Parallel.ForEach(_points, options, (item, loopState) =>
-        {
-            try
-            {
-                Debug.Log("foring " + item.Value.points.Count + " points to " + Mathf.CeilToInt((float)item.Value.points.Count / (float)maxPointsInAMesh) + "objects(an object contains " + maxPointsInAMesh + " points).");
-                List<CenteredPoints> buffCenteredPoints = new List<CenteredPoints>();
-                for (int i = 0; i < Mathf.CeilToInt((float)item.Value.points.Count / (float)maxPointsInAMesh); i++)
-                {
-                    CenteredPoints newPoints = new CenteredPoints();
-                    newPoints.center = item.Value.center;
-                    newPoints.points = new List<CloudPoint>(item.Value.points.GetRange(i * maxPointsInAMesh, Mathf.Min(item.Value.points.Count - i * maxPointsInAMesh, maxPointsInAMesh)));
-                    buffCenteredPoints.Add(newPoints);
-                    subCount++;
-                }
-
-                if (buffCenteredPoints.Count > 0)
-                    lock (Thread.CurrentContext)
-                        chunkedPoints.Add(item.Key, new List<CenteredPoints>(buffCenteredPoints));
-
-                if (destroyed)
-                {
-                    loopState.Stop();
-                    return;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                Debug.LogError("Slicing process is Dead!!!!!!!!!!!!!");
-            }
-        });
-        Debug.Log("Slicing process is finished.");
     }
 
     void CallPointsToCube()
