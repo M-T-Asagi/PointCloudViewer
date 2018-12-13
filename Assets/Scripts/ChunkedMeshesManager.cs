@@ -8,10 +8,6 @@ public class ChunkedMeshesManager : MonoBehaviour
     public GameObject chunksParent;
     public IndexedGameObjects indexedObjects;
 
-    private void Start()
-    {
-    }
-
     public List<GameObject> GetChunkedObjectRange(IndexedVector3 lower, IndexedVector3 higher)
     {
         List<GameObject> returner = new List<GameObject>();

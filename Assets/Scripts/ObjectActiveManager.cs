@@ -14,11 +14,16 @@ public class ObjectActiveManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        target.SetActive(active);
+        SetActiveTarget();
     }
 
     // Update is called once per frame
     void Update()
+    {
+        SetActiveTarget();
+    }
+
+    void SetActiveTarget()
     {
         if (target != null && target.activeSelf != active)
         {
