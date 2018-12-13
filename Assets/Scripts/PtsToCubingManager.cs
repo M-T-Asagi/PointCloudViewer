@@ -380,8 +380,8 @@ public class PtsToCubingManager : MonoBehaviour
                 pbManager.UpdateStateText(arranger.ProcessedPointCount + " /\n" + arranger.AllPointCount);
                 break;
             case State.Slicing:
-                pbManager.UpdateState((float)subCount / (float)subAll);
-                pbManager.UpdateStateText(subCount + " /\n" + subAll);
+                pbManager.UpdateState((float)slicer.ProcessedVertexCount / (float)slicer.VertexCount);
+                pbManager.UpdateStateText(slicer.ProcessedVertexCount + " /\n" + slicer.VertexCount);
                 break;
             case State.Chunking:
                 pbManager.UpdateState((float)arranger.ProcessedChunkedCount / (float)arranger.AllChunkCount);
