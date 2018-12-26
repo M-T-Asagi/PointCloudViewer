@@ -34,6 +34,8 @@ public class PtsToCubingManager : MonoBehaviour
     [SerializeField]
     PtsToCloudPointConverter converter;
     [SerializeField]
+    PointsCollector collector;
+    [SerializeField]
     PointsArranger arranger;
     [SerializeField]
     PointsSlicer slicer;
@@ -113,12 +115,18 @@ public class PtsToCubingManager : MonoBehaviour
 
     void ConverterProcessUp(object sender, PtsToCloudPointConverter.ProcessUpArgs args)
     {
-        CallCollecting(args.cloudPoints);
+        CallCollectorProcess(args.cloudPoints);
+    }
+
+    void CallCollectorProcess(CloudPoint[] _points)
+    {
+        stateNow = State.Collecting;
+        collector.Process(_points);
     }
 
     async void CallCollecting(CloudPoint[] _points)
     {
-        stateNow = State.Collecting;
+
         CloudPoint[] points = (CloudPoint[])_points.Clone();
 
         subCount = 0;
