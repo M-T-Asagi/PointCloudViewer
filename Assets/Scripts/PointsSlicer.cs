@@ -45,6 +45,7 @@ public class PointsSlicer : MonoBehaviour
     {
         options = new ParallelOptions();
         options.MaxDegreeOfParallelism = maxThreadNum;
+        CallSliceChunk(new Dictionary<IndexedVector3, CenteredPoints>(_points), maxPointCountInAMesh);
     }
 
     async void CallSliceChunk(Dictionary<IndexedVector3, CenteredPoints> _points, int maxPointCountInAMesh)
