@@ -240,6 +240,7 @@ GameObject:
   - component: {fileID: 200755977}
   - component: {fileID: 200755979}
   - component: {fileID: 200755978}
+  - component: {fileID: 200755980}
   m_Layer: 0
   m_Name: Arranging
   m_TagString: Untagged
@@ -333,6 +334,7 @@ MonoBehaviour:
   maxVertexCountInAMesh: 64000
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
+  slicer: {fileID: 200755980}
   baker: {fileID: 200755975}
   saver: {fileID: 200755973}
   cuber: {fileID: 200755977}
@@ -380,6 +382,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 1162218787}
   active: 1
+--- !u!114 &200755980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 200755970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba4eb10d237e4cb419ad1e36f77da00d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxVertexCountInAMesh: 64000
+  maxThreadNum: 10
 --- !u!1 &421666754
 GameObject:
   m_ObjectHideFlags: 0

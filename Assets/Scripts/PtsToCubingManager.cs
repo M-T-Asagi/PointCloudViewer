@@ -353,6 +353,9 @@ public class PtsToCubingManager : MonoBehaviour
         {
             meshesRoot.transform.position = -(center / (float)bakeCount);
             stateNow = State.Saving;
+        }
+        else if (stateNow == State.Saving)
+        {
             saver.Process(meshesRoot);
         }
 
