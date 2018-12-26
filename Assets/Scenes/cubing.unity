@@ -328,10 +328,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7ce7c0afecc4c94d88728143c550dbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeSize: 0.1
+  cubeSize: 0.3
   filePath: Assets\Resources\PTS\DG_30mm.txt
   maxThreadNum: 10
-  maxVertexCountInAMesh: 64000
   converter: {fileID: 200755974}
   arranger: {fileID: 200755971}
   slicer: {fileID: 200755980}

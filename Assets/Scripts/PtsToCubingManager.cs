@@ -32,8 +32,6 @@ public class PtsToCubingManager : MonoBehaviour
     [SerializeField]
     int maxThreadNum = 3;
     [SerializeField]
-    int maxVertexCountInAMesh = 64000;
-    [SerializeField]
     PtsToCloudPointConverter converter;
     [SerializeField]
     PointsArranger arranger;
