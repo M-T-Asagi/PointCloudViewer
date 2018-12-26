@@ -93,8 +93,8 @@ public class PtsToCubingManager : MonoBehaviour
         chunkedMeshesManager.chunksParent = meshesRoot;
         chunkedMeshesManager.indexedObjects = new IndexedGameObjects();
 
-        converter.processUp += ProcessUp;
-        converter.allProcessUp += AllProcessUp;
+        converter.processUp += ConverterProcessUp;
+        converter.allProcessUp += ConverterAllProcessUp;
         arranger.finishArranging += ArrangingProcessUp;
         arranger.finishProcess += ChunkingProcessUp;
         slicer.finishProcess += SlicerProcessUp;
@@ -111,7 +111,7 @@ public class PtsToCubingManager : MonoBehaviour
         converter.Process();
     }
 
-    void ProcessUp(object sender, PtsToCloudPointConverter.ProcessUpArgs args)
+    void ConverterProcessUp(object sender, PtsToCloudPointConverter.ProcessUpArgs args)
     {
         CallCollecting(args.cloudPoints);
     }
@@ -187,7 +187,7 @@ public class PtsToCubingManager : MonoBehaviour
         Debug.Log("Collected " + points.Length + "points to " + collectedPoints.Count);
     }
 
-    void AllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
+    void ConverterAllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
     {
         CallRestoringPoints();
     }
