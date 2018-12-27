@@ -15,4 +15,32 @@ cubingにはいくつかオブジェクトがありますが、触る必要が�
 
 Arrangingにはいくつかのスクリプトがアタッチされていますが、適当に役割とパラメータの解説をしていきます。
 
-（中断中）
+## Pts To Cubing Manager
+ ### Pts To Cubing Manager は 指定されたptsデータをUnity上で任意の形状に置き換えモデル化する処理です
+ ### これ自体に機能はなく、それぞれの機能を呼び出したり、管理したりします
+ + File Path
+  + .ptsファイルのパスを指定します。Projectフォルダをルートとした相対パスか、絶対パスでの記述が使用できます。
+ + Cube Size
+  + 点群を変換する際、何メートル間隔で点群をまとめるか指定します。
+  + この指定を「1」にすると、XYZ軸共に-0.5~0.5mの正方形状に指定される範囲内にある点がすべて1つの点として処理されます。
+ + Max Thread Num
+  + 使用されるスレッドの最大数
+ + Max Vertex Count In A Mesh (will deprecate)
+ + スクリプト系
+  + Converter
+  + Arranger
+  + Slicer
+  + Baker
+  + Saver
+  + Cuber
+  + Pb Manager
+  + Pb Manager Activer Manager
+  + subpb Manager
+  + Sub PB Manager Active Manager
+ + State Text
+  + 今どのスクリプトが処理しているかを把握するための表示領域
+  
+## Pts To Cloud Point Converter
+ ### 
+  
+  
