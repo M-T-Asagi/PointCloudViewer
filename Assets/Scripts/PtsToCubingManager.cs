@@ -97,6 +97,7 @@ public class PtsToCubingManager : MonoBehaviour
 
         converter.processUp += ConverterProcessUp;
         converter.allProcessUp += ConverterAllProcessUp;
+        collector.finishCollectingProcess += CollectingProcessUp;
         arranger.finishArranging += ArrangingProcessUp;
         arranger.finishProcess += ChunkingProcessUp;
         slicer.finishProcess += SlicerProcessUp;
@@ -121,78 +122,13 @@ public class PtsToCubingManager : MonoBehaviour
     void CallCollectorProcess(CloudPoint[] _points)
     {
         stateNow = State.Collecting;
-        collector.Process(_points);
+        collector.CollectingProcess(collectedPoints, _points, cubeSize);
     }
 
-    async void CallCollecting(CloudPoint[] _points)
+    void CollectingProcessUp(object sender, PointsCollector.FinishProcessArgs args)
     {
-
-        CloudPoint[] points = (CloudPoint[])_points.Clone();
-
-        subCount = 0;
-        subAll = points.Length;
-
-        await Task.Run(() => Collecting(points));
+        collectedPoints = new Dictionary<IndexedVector3, Color>(args.collectedPoints);
         CallConverterProcess();
-    }
-
-    void Collecting(CloudPoint[] points)
-    {
-        ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
-        Parallel.For(0, points.Length, options, (i, loopState) =>
-        {
-            IndexedVector3 newIndex = new IndexedVector3(
-                Mathf.RoundToInt(points[i].point.x / cubeSize),
-                Mathf.RoundToInt(points[i].point.y / cubeSize),
-                Mathf.RoundToInt(points[i].point.z / cubeSize)
-                );
-
-            bool canAdd = false;
-            rwlock.EnterUpgradeableReadLock();
-
-            try
-            {
-                canAdd = !collectedPoints.ContainsKey(newIndex);
-                if (canAdd)
-                {
-                    rwlock.EnterWriteLock();
-                    try
-                    {
-                        collectedPoints.Add(newIndex, points[i].color);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError(e);
-                        Debug.LogException(e);
-                        Debug.LogError("Collecting process is Dead!!!!!!!!!!!!!");
-                    }
-                    finally
-                    {
-                        rwlock.ExitWriteLock();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-                Debug.LogException(e);
-                Debug.LogError("Collecting process is Dead!!!!!!!!!!!!!");
-            }
-            finally
-            {
-                rwlock.ExitUpgradeableReadLock();
-            }
-
-            subCount++;
-
-            if (destroyed)
-            {
-                loopState.Stop();
-                return;
-            }
-        });
-
-        Debug.Log("Collected " + points.Length + "points to " + collectedPoints.Count);
     }
 
     void ConverterAllProcessUp(object sender, PtsToCloudPointConverter.AllProcessUpArgs args)
