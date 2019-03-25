@@ -84,7 +84,7 @@ public class MeshSaver : MonoBehaviour
 
     void SavePrefabToAsset()
     {
-        PrefabUtility.CreatePrefab(path + "/meshes.prefab", prefabRoot);
+        PrefabUtility.SaveAsPrefabAsset(prefabRoot, path + "/meshes.prefab");
         AssetDatabase.SaveAssets();
     }
 }

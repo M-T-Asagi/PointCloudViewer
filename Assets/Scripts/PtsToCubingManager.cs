@@ -20,6 +20,7 @@ public class PtsToCubingManager : MonoBehaviour
         Generating,
         Baking,
         Transforming,
+        CallSave,
         Saving,
 
         ItemNum
@@ -273,7 +274,7 @@ public class PtsToCubingManager : MonoBehaviour
 
     void MeshesBaked(object sender, MeshBaker.FinishBakingArgs args)
     {
-        stateNow = State.Saving;
+        stateNow = State.CallSave;
 
         chunkedMeshes.Clear();
 
@@ -294,11 +295,12 @@ public class PtsToCubingManager : MonoBehaviour
         if (stateNow == State.Transforming)
         {
             meshesRoot.transform.position = -(center / (float)bakeCount);
-            stateNow = State.Saving;
+            stateNow = State.CallSave;
         }
-        else if (stateNow == State.Saving)
+        else if (stateNow == State.CallSave)
         {
             saver.Process(meshesRoot);
+            stateNow = State.Saving;
         }
 
         UpdateMainProgressBar();
