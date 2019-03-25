@@ -348,8 +348,8 @@ public class PtsToCubingManager : MonoBehaviour
         switch (stateNow)
         {
             case State.Collecting:
-                subpbManager.UpdateState((float)subCount / (float)subAll);
-                subpbManager.UpdateStateText(subCount + "/\n" + subAll);
+                subpbManager.UpdateState((float)collector.ProcessedCount / (float)collector.CountAll);
+                subpbManager.UpdateStateText(collector.ProcessedCount + "/\n" + collector.CountAll);
                 break;
             case State.Chunking:
                 subpbManager.UpdateState((float)arranger.ProcessedPointCount / (float)arranger.AllPointCount);
