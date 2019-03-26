@@ -6,7 +6,7 @@ public class MeshSaver : MonoBehaviour
 {
 
     [SerializeField]
-    string fileNameHeader = "";
+    string dirNameHeader = "";
 
     const bool saveMesh = true;
 
@@ -47,7 +47,7 @@ public class MeshSaver : MonoBehaviour
             AssetDatabase.CreateFolder("Assets/Resources", "SavedMeshes");
 
         string time = DateTime.Now.ToFileTimeUtc().ToString();
-        string _dirName = fileNameHeader + "-" + time;
+        string _dirName = dirNameHeader + "-" + time;
         path = "Assets/Resources/SavedMeshes/" + _dirName;
 
         AssetDatabase.CreateFolder("Assets/Resources/SavedMeshes", _dirName);
