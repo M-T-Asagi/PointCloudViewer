@@ -43,7 +43,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
     [SerializeField]
     float sizeScale = 0.0001f;
     [SerializeField]
-    int maxPointsNumInAnObject = 300000;
+    int maxPointsNumInAProcess = 300000;
     [SerializeField]
     int maxThreadNum = 4;
     [SerializeField]
@@ -79,7 +79,7 @@ public class PtsToCloudPointConverter : MonoBehaviour
         reader = new StreamReader(path);
         string fl = reader.ReadLine();
         totalPointCount = Int32.Parse(fl);
-        totalSectionCount = Mathf.CeilToInt(totalPointCount / maxPointsNumInAnObject);
+        totalSectionCount = Mathf.CeilToInt(totalPointCount / maxPointsNumInAProcess);
     }
 
     public bool Process()
@@ -109,10 +109,10 @@ public class PtsToCloudPointConverter : MonoBehaviour
     {
         Debug.Log("Scan start!");
 
-        int newPointsArrayCount = Mathf.Min(maxPointsNumInAnObject, totalPointCount - maxPointsNumInAnObject * processedSectionCount);
+        int newPointsArrayCount = Mathf.Min(maxPointsNumInAProcess, totalPointCount - maxPointsNumInAProcess * processedSectionCount);
         Debug.Log("new points array count : " + newPointsArrayCount);
 
-        continuos = (newPointsArrayCount >= maxPointsNumInAnObject);
+        continuos = (newPointsArrayCount >= maxPointsNumInAProcess);
 
         CloudPoint[] points = new CloudPoint[newPointsArrayCount];
 
